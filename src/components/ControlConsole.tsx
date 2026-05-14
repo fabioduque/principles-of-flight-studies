@@ -42,36 +42,6 @@ interface Props {
   resetToDefaults: () => void;
 }
 
-// Simple keyboard icon, drawn inline so it inherits currentColor for theme.
-function KeyboardIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size * 0.7}
-      viewBox="0 0 22 14"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.4}
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="1" y="1.5" width="20" height="11" rx="1.5" />
-      <line x1="4" y1="5" x2="4.5" y2="5" />
-      <line x1="7" y1="5" x2="7.5" y2="5" />
-      <line x1="10" y1="5" x2="10.5" y2="5" />
-      <line x1="13" y1="5" x2="13.5" y2="5" />
-      <line x1="16" y1="5" x2="16.5" y2="5" />
-      <line x1="19" y1="5" x2="19.5" y2="5" />
-      <line x1="4" y1="8" x2="4.5" y2="8" />
-      <line x1="7" y1="8" x2="7.5" y2="8" />
-      <line x1="10" y1="8" x2="10.5" y2="8" />
-      <line x1="13" y1="8" x2="13.5" y2="8" />
-      <line x1="16" y1="8" x2="19.5" y2="8" />
-      <rect x="7" y="10.5" width="8" height="0.6" rx="0.3" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
 // Throttle key badge — sits above and below the slider showing the bound
 // key plus a prominent sign for the action direction. Always rendered;
 // opacity transitions between dim and full when keyboard mode toggles.
@@ -312,8 +282,26 @@ export function ControlConsole(props: Props) {
               color: 'var(--bg-elev)',
             } : undefined}
           >
-            <KeyboardIcon size={16} />
-            <span className="font-semibold tracking-wider">KEYBOARD</span>
+            {/* K key cap — makes the keyboard shortcut visible at a glance */}
+            <span
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontWeight: 700,
+                fontSize: 11,
+                padding: '0 5px',
+                minWidth: 18,
+                height: 16,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid currentColor',
+                borderBottomWidth: 2,
+                lineHeight: 1,
+              }}
+            >
+              K
+            </span>
+            <span className="font-semibold tracking-wider">{t.keyboard}</span>
             <span
               className="inline-block w-1.5 h-1.5 rounded-full"
               style={{
