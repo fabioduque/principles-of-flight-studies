@@ -113,11 +113,11 @@
   }
 
   h1, h2, h3, h4 {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
     color: var(--text);
     letter-spacing: -0.02em;
-    font-weight: 600;
-    font-variation-settings: 'SOFT' 30, 'opsz' 144;
+    font-weight: 700;
+    font-variation-settings: 'opsz' 48;
   }
 
   ::selection {
@@ -166,13 +166,12 @@
     background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg-soft) 100%);
   }
   .card-header-title {
-    font-family: 'Fraunces', Georgia, serif;
-    font-size: 1rem;
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-size: 0.92rem;
     font-weight: 600;
     color: var(--text);
-    letter-spacing: -0.01em;
-    font-variation-settings: 'SOFT' 30, 'opsz' 32;
-    font-style: italic;
+    letter-spacing: -0.015em;
+    font-variation-settings: 'opsz' 24;
   }
   .card-header-aside {
     font-family: 'IBM Plex Mono', monospace;
@@ -395,6 +394,6 @@
   .bg-soft         { background-color: var(--bg-soft); }
   .border-app      { border-color: var(--border); }
   .border-rule     { border-color: var(--rule); }
-  .font-display    { font-family: 'Fraunces', Georgia, serif; }
+  .font-display    { font-family: 'Bricolage Grotesque', system-ui, sans-serif; }
   .font-mono-tech  { font-family: 'IBM Plex Mono', monospace; }
 }

@@ -530,18 +530,22 @@ export function ControlConsole(props: Props) {
                 <span className="meta mb-1" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
                   FLAPS
                 </span>
-                <div className="flex flex-col gap-px h-[204px] border border-app">
-                  {[...FLAP_SETTINGS].reverse().map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      onClick={() => setFlaps(f)}
-                      className={`btn !border-0 flex-1 min-w-[58px] ${f === flaps ? 'is-active' : ''}`}
-                      aria-pressed={f === flaps}
-                    >
-                      {f}°
-                    </button>
-                  ))}
+                <div className="flex flex-col items-center gap-1">
+                  <ThrottleKeyBadge k="T" sign="+" active={keyboardMode} />
+                  <div className="flex flex-col gap-px h-[152px] border border-app">
+                    {[...FLAP_SETTINGS].reverse().map((f) => (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => setFlaps(f)}
+                        className={`btn !border-0 flex-1 min-w-[58px] ${f === flaps ? 'is-active' : ''}`}
+                        aria-pressed={f === flaps}
+                      >
+                        {f}°
+                      </button>
+                    ))}
+                  </div>
+                  <ThrottleKeyBadge k="G" sign="−" active={keyboardMode} />
                 </div>
               </div>
             </div>

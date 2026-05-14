@@ -217,7 +217,7 @@ export function BankView({ state }: Props) {
       <g transform={`translate(${Lx + (Lx >= 0 ? 8 : -112)}, ${Ly - 12})`}>
         <rect x={0} y={0} width={104} height={26} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.8} />
         <rect x={0} y={0} width={5} height={26} fill={COLOR_LIFT} />
-        <text x={11} y={11} fill={COLOR_LIFT} fontSize={13} fontWeight={700} fontFamily="'Fraunces', Georgia, serif" fontStyle="italic">L</text>
+        <text x={11} y={11} fill={COLOR_LIFT} fontSize={13} fontWeight={700} fontFamily="'Bricolage Grotesque', system-ui, sans-serif">L</text>
         <text x={11} y={22} fill="var(--text)" fontSize={11} fontFamily="'IBM Plex Mono', monospace" fontWeight={500}>
           {Math.round(state.L).toLocaleString()} N
         </text>
@@ -227,7 +227,7 @@ export function BankView({ state }: Props) {
       <g transform={`translate(8, ${Wpx + 4})`}>
         <rect x={0} y={0} width={104} height={26} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.8} />
         <rect x={0} y={0} width={5} height={26} fill={COLOR_WEIGHT} />
-        <text x={11} y={11} fill={COLOR_WEIGHT} fontSize={13} fontWeight={700} fontFamily="'Fraunces', Georgia, serif" fontStyle="italic">W</text>
+        <text x={11} y={11} fill={COLOR_WEIGHT} fontSize={13} fontWeight={700} fontFamily="'Bricolage Grotesque', system-ui, sans-serif">W</text>
         <text x={11} y={22} fill="var(--text)" fontSize={11} fontFamily="'IBM Plex Mono', monospace" fontWeight={500}>
           {WEIGHT_N.toLocaleString()} N
         </text>

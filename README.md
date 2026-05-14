@@ -42,6 +42,7 @@ Requires Node 18 or newer.
   - ← / A — bank −5°
   - → / D — bank +5°
   - R / F — throttle ±50 N
+  - T / G — flaps extend / retract (cycles 0° → 10° → 30°)
   - X — reset pitch & bank to 0
 
 ## Stack

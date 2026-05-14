@@ -89,8 +89,7 @@ function ForceArrow({ end, labelAt, color, label, value, ariaLabel }: ForceArrow
           fill={color}
           fontSize={14}
           fontWeight={700}
-          fontFamily="'Fraunces', Georgia, serif"
-          fontStyle="italic"
+          fontFamily="'Bricolage Grotesque', system-ui, sans-serif"
         >
           {label}
         </text>
@@ -452,8 +451,7 @@ export function FlightDiagram({ state }: Props) {
           y={146}
           fill="var(--text)"
           fontSize={10.5}
-          fontFamily="'Fraunces', Georgia, serif"
-          fontStyle="italic"
+          fontFamily="'Bricolage Grotesque', system-ui, sans-serif"
         >
           Cessna 152 — four forces
         </text>

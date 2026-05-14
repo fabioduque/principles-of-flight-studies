@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   type Flaps,
+  FLAP_SETTINGS,
   PRESETS,
   WEIGHT_N,
   solveFromPitchThrottleBank,
@@ -110,6 +111,18 @@ export default function App() {
       } else if (k === 'x' || k === 'X') {
         setTheta(0);
         setBank(0);
+      } else if (k === 't' || k === 'T') {
+        // Cycle flaps DOWN (more flap deployed): 0 → 10 → 30 → 30 (clamp)
+        setFlaps((f) => {
+          const idx = FLAP_SETTINGS.indexOf(f);
+          return FLAP_SETTINGS[Math.min(idx + 1, FLAP_SETTINGS.length - 1)];
+        });
+      } else if (k === 'g' || k === 'G') {
+        // Cycle flaps UP (retract): 30 → 10 → 0 → 0 (clamp)
+        setFlaps((f) => {
+          const idx = FLAP_SETTINGS.indexOf(f);
+          return FLAP_SETTINGS[Math.max(idx - 1, 0)];
+        });
       } else {
         handled = false;
       }
@@ -168,10 +181,22 @@ export default function App() {
                 <div className="meta" style={{ fontSize: 9, letterSpacing: '0.28em' }}>
                   AERODYNAMIC STUDY SUPPLEMENT · CESSNA 152
                 </div>
-                <h1 className="font-display italic text-2xl sm:text-3xl mt-0.5 leading-none" style={{ fontVariationSettings: "'SOFT' 30, 'opsz' 144" }}>
-                  Principles <span className="text-fg-soft font-normal not-italic mx-1">of</span>
+                <h1
+                  className="font-display text-2xl sm:text-3xl mt-1 leading-none flex flex-wrap items-baseline gap-x-2.5"
+                  style={{ fontVariationSettings: "'opsz' 96", fontWeight: 700, letterSpacing: '-0.025em' }}
+                >
+                  <span>Principles</span>
+                  <span className="text-fg-soft" style={{ fontSize: '0.7em', fontWeight: 400 }}>
+                    of
+                  </span>
                   <span className="text-accent">Flight</span>
                 </h1>
+                <div
+                  className="num text-fg-mute mt-1.5"
+                  style={{ fontSize: 10, letterSpacing: '0.04em' }}
+                >
+                  Study aid · simplified model · may contain inaccuracies
+                </div>
               </div>
               <span className="stamp hidden sm:inline-flex">
                 <span className="stamp-num">SL · ISA</span>
