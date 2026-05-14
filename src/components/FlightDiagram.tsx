@@ -149,7 +149,8 @@ export function FlightDiagram({ state }: Props) {
 
   return (
     <svg
-      viewBox="-380 -250 760 420"
+      viewBox="-380 -260 760 480"
+      preserveAspectRatio="xMidYMid meet"
       className="w-full h-full"
       role="img"
       aria-label={`Cessna 152 side view. Pitch ${theta.toFixed(1)} degrees, AoA ${alpha.toFixed(1)} degrees, flight path ${gamma.toFixed(1)} degrees, airspeed ${V_kts.toFixed(0)} knots.`}
@@ -182,7 +183,7 @@ export function FlightDiagram({ state }: Props) {
       </defs>
 
       {/* Earth band */}
-      <rect x={-380} y={0} width={760} height={170} fill="url(#ground-hatch)" opacity={0.55} />
+      <rect x={-380} y={0} width={760} height={230} fill="url(#ground-hatch)" opacity={0.55} />
 
       {/* Horizon */}
       <line x1={-340} y1={0} x2={340} y2={0} stroke={COLOR_HORIZON} strokeWidth={1} strokeDasharray="6 4" />
@@ -311,29 +312,25 @@ export function FlightDiagram({ state }: Props) {
         <line x1={liftEnd.x} y1={0} x2={liftEnd.x} y2={liftEnd.y} stroke={COLOR_LIFT} strokeWidth={0.7} strokeDasharray="2 3" opacity={0.45} />
         <line x1={0} y1={liftEnd.y} x2={liftEnd.x} y2={liftEnd.y} stroke={COLOR_LIFT} strokeWidth={0.7} strokeDasharray="2 3" opacity={0.45} />
 
-        {/* Lᵧ label — paper tag on the vertical projection */}
-        <g transform={`translate(${liftEnd.x < 0 ? -10 : 10}, ${liftEnd.y / 2 + 4})`}>
+        {/* Lᵧ label — always sits on the right side of the vertical projection
+            axis (drag arrow and its label always sit to the left of the CG,
+            so right-of-axis avoids that collision). */}
+        <g transform={`translate(14, ${liftEnd.y / 2})`}>
           <rect
-            x={liftEnd.x < 0 ? -92 : 0}
-            y={-11}
-            width={92}
-            height={22}
+            x={0}
+            y={-14}
+            width={112}
+            height={28}
             fill="var(--bg-elev)"
             stroke="var(--rule)"
-            strokeWidth={0.7}
+            strokeWidth={0.8}
           />
-          <rect
-            x={liftEnd.x < 0 ? -92 : 0}
-            y={-11}
-            width={4}
-            height={22}
-            fill={COLOR_LIFT}
-          />
+          <rect x={0} y={-14} width={5} height={28} fill={COLOR_LIFT} />
           <text
-            x={liftEnd.x < 0 ? -86 : 6}
+            x={11}
             y={5}
             fill="var(--text)"
-            fontSize={11}
+            fontSize={12}
             fontFamily="'IBM Plex Mono', monospace"
             fontWeight={500}
           >
