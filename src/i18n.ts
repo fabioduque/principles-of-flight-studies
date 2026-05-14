@@ -1,9 +1,11 @@
 // Minimal i18n for the study tool. Two languages: en (default) and pt
-// (Portuguese — BR/PT-friendly aviation terms). Letters L/W/T/D and
-// acronyms IAS/AoA/Vs are kept in English in both because that's how
-// pilots learn them. Per the project owner: "Lift" stays as Lift even in
-// Portuguese, "Weight" translates to "Peso", and we extend the same rule
-// to Thrust/Drag (kept English) for consistency.
+// (Portuguese — PT-PT terminology: "perda" not "estol", "a subir" /
+// "a descer", "planeamento", etc.). Letters L/W/T/D and acronyms
+// IAS/AoA/Vs are kept in English in both because that's how pilots learn
+// the formulas. Force NAMES are translated and the English term is kept
+// in parens for cross-reference: "Sustentação (Lift)", "Peso (Weight)",
+// "Tração (Thrust)", "Resistência Aerodinâmica (Drag)" — note: drag is
+// "Resistência Aerodinâmica", NOT "arrasto" (which is BR usage).
 
 import { createContext, useContext } from 'react';
 
@@ -179,7 +181,7 @@ const pt: typeof en = {
   dragAxis: 'Resistência aerodinâmica (N)',
   alphaAxis: 'Ângulo de ataque α (°)',
   clAxis: 'Coef. de sustentação CL',
-  stallRegion: 'estol',
+  stallRegion: 'perda',
   alphaCritical: 'α crítico',
   vsLabel: 'Vs',
   vsHint: 'velocidade mínima',
@@ -188,7 +190,7 @@ const pt: typeof en = {
   pedagogyL2: 'Como L = ½ρV²·S·CL, isolando V obtemos:',
   pedagogyFormula: 'V = √(2W / (ρ·S·CL))',
   pedagogyL3: 'Maior CL → menor velocidade mínima.',
-  pedagogyL4: 'O pico da curva (CL max) é portanto a velocidade mais baixa em voo nivelado — Vs. Passar o pico = estol.',
+  pedagogyL4: 'O pico da curva (CL max) é portanto a velocidade mais baixa em voo nivelado — Vs. Passar o pico = perda.',
 
   consoleTitle: 'CONSOLE · COMANDOS DO PILOTO',
   step: 'PASSO',
@@ -214,14 +216,14 @@ const pt: typeof en = {
   keyboardToDisable: 'para desativar o teclado.',
 
   statusLevel: 'nivelado',
-  statusClimbing: 'subindo',
-  statusDescending: 'descendo',
-  statusNearStall: 'quase em estol',
-  statusStalled: 'em estol',
-  statusPullUp: 'cabrando',
+  statusClimbing: 'a subir',
+  statusDescending: 'a descer',
+  statusNearStall: 'quase em perda',
+  statusStalled: 'em perda',
+  statusPullUp: 'a cabrar',
   statusUnloaded: 'aliviado',
 
-  stalledStamp: 'EM ESTOL',
+  stalledStamp: 'EM PERDA',
 
   ias: 'IAS',
   aoa: 'α — ângulo',
@@ -231,13 +233,13 @@ const pt: typeof en = {
   margin: 'margem V−Vs',
   ld: 'L/D',
   status: 'ESTADO',
-  alphaStallRatio: 'α/α_estol',
+  alphaStallRatio: 'α/α_perda',
 
   scenarioCruise: 'Cruzeiro',
   scenarioVyClimb: 'Subida Vy',
   scenarioApproach: 'Aproximação',
   scenarioEngineOut: 'Pane motor (planeio)',
-  scenarioStall: 'Estol',
+  scenarioStall: 'Perda',
 
   // PT keeps the English term in parens so students learn both:
   // letter stays English (formulas), name is translated, English in parens.
@@ -250,7 +252,7 @@ const pt: typeof en = {
   themeLight: 'claro',
   themeDark: 'escuro',
 
-  footer: 'Ferramenta educativa — não usar para planejamento de voo.',
+  footer: 'Ferramenta educativa — não usar para planeamento de voo.',
 };
 
 export const translations = { en, pt };
