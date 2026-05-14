@@ -93,6 +93,10 @@ export default function App() {
     function handleToggle(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      // Ignore K combined with Ctrl/Cmd/Alt — those are browser shortcuts
+      // (Cmd+K = Add Bookmark, Ctrl+K = focus URL bar, etc.) and shouldn't
+      // toggle keyboard mode.
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.key === 'k' || e.key === 'K') {
         e.preventDefault();
         setKeyboardMode((v) => !v);
@@ -138,6 +142,26 @@ export default function App() {
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
       const k = e.key;
+
+      // Ignore solo modifier presses — these fire as keydowns too but the user
+      // hasn't actually requested anything yet.
+      if (k === 'Control' || k === 'Alt' || k === 'Meta' || k === 'Shift') return;
+
+      // Modifier + key combos (Ctrl+R, Cmd+R, Cmd+L, …) are browser shortcuts.
+      // Don't run the pilot action and don't preventDefault — but DO surface
+      // the keyboard-escape hint so the user realises piloting is on and
+      // their browser shortcut is being shadowed by R/F/T/G/…
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        setShowKeyboardEscapeHint(true);
+        if (escapeHintTimerRef.current !== null) clearTimeout(escapeHintTimerRef.current);
+        escapeHintTimerRef.current = window.setTimeout(() => {
+          setShowKeyboardEscapeHint(false);
+          unboundKeyCountRef.current = 0;
+          escapeHintTimerRef.current = null;
+        }, 6000);
+        return;
+      }
+
       const kind = classify(k);
 
       if (kind === 'unbound') {
