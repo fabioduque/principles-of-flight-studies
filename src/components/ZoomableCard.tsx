@@ -21,7 +21,14 @@ interface Props {
 
 export function ZoomableCard({ title, aside, children, onOpenChange }: Props) {
   const [open, setOpen] = useState(false);
-  useEffect(() => { onOpenChange?.(open); }, [open, onOpenChange]);
+  // Only signal transitions — NOT the initial mount-with-open=false. Otherwise
+  // four cards would each fire onOpenChange(false) on mount, pushing the
+  // parent's counter to -4 before the user clicks anything.
+  useEffect(() => {
+    if (!open) return;
+    onOpenChange?.(true);
+    return () => onOpenChange?.(false);
+  }, [open, onOpenChange]);
   return (
     <>
       <div className="card flex flex-col h-full relative">
