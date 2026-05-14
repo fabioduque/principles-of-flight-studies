@@ -13,10 +13,15 @@ interface Props {
   /** Render-prop returning the chart/diagram content. Called once inline
    *  and again inside the modal — must be safe to re-mount. */
   children: (mode: 'inline' | 'modal') => React.ReactNode;
+  /** Fires whenever the modal opens or closes. Used by the parent to
+   *  force-collapse the pilot console so the user can still see live
+   *  state and keep keyboard-piloting under the modal. */
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function ZoomableCard({ title, aside, children }: Props) {
+export function ZoomableCard({ title, aside, children, onOpenChange }: Props) {
   const [open, setOpen] = useState(false);
+  useEffect(() => { onOpenChange?.(open); }, [open, onOpenChange]);
   return (
     <>
       <div className="card flex flex-col h-full relative">
@@ -122,8 +127,15 @@ function ZoomModal({ title, onClose, children }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col"
-      style={{ background: 'color-mix(in srgb, var(--bg) 96%, transparent)', backdropFilter: 'blur(2px)' }}
+      className="fixed top-0 inset-x-0 z-[100] flex flex-col"
+      // Leave the bottom 96 px untouched so the (force-collapsed) pilot
+      // console stays visible — student can monitor state and keep flying
+      // with the keyboard while inspecting the chart in detail.
+      style={{
+        bottom: 96,
+        background: 'color-mix(in srgb, var(--bg) 96%, transparent)',
+        backdropFilter: 'blur(2px)',
+      }}
     >
       {/* Modal cartouche */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-app" style={{ background: 'var(--bg-soft)' }}>

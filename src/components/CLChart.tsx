@@ -5,12 +5,21 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  ReferenceArea,
   ReferenceLine,
   ReferenceDot,
   ResponsiveContainer,
 } from 'recharts';
 import type { Flaps } from '../physics';
-import { FLAP_CONFIGS, FLAP_SETTINGS, sampleCLCurve } from '../physics';
+import {
+  FLAP_CONFIGS,
+  FLAP_SETTINGS,
+  RHO_SL,
+  KT_TO_MS,
+  WEIGHT_N,
+  WING_AREA,
+  sampleCLCurve,
+} from '../physics';
 import { StallStamp } from './StallStamp';
 import { useI18n } from '../i18n';
 
@@ -55,6 +64,12 @@ export function CLChart({ activeFlaps, alpha, CL, showAllFlapCurves, stalled }: 
   for (let v = tickStart; v <= alphaMax; v += 4) ticks.push(v);
 
   const activeCfg = FLAP_CONFIGS[activeFlaps];
+
+  // Wings-level stall speed at the active flap config — derived from the
+  // chart's own CL_max value so the displayed Vs always matches the visible
+  // peak: V_s = sqrt(2W / (ρ · S · CL_max)).
+  const VsKt = Math.sqrt((2 * WEIGHT_N) / (RHO_SL * WING_AREA * activeCfg.CLmax)) / KT_TO_MS;
+  const activeColor = FLAP_STYLES[activeFlaps].color;
 
   return (
     <div
@@ -120,16 +135,68 @@ export function CLChart({ activeFlaps, alpha, CL, showAllFlapCurves, stalled }: 
                 return [Number(value).toFixed(2), `flaps ${flap}°`];
               }}
             />
+            {/* Stall region — shaded band from α_stall to the right edge */}
+            <ReferenceArea
+              x1={activeCfg.alphaStall}
+              x2={alphaMax}
+              fill="var(--c-weight)"
+              fillOpacity={0.10}
+              strokeOpacity={0}
+              ifOverflow="hidden"
+              label={{
+                value: t.stallRegion.toUpperCase(),
+                position: 'insideTopRight',
+                fill: 'var(--c-weight)',
+                fontSize: 9.5,
+                fontWeight: 700,
+              }}
+            />
+
+            {/* Critical α — vertical line at the stall angle */}
+            <ReferenceLine
+              x={activeCfg.alphaStall}
+              stroke="var(--c-weight)"
+              strokeDasharray="4 3"
+              strokeOpacity={0.7}
+              label={{
+                value: `${t.alphaCritical} = ${activeCfg.alphaStall}°`,
+                position: 'insideBottomRight',
+                fill: 'var(--c-weight)',
+                fontSize: 9.5,
+                fontWeight: 600,
+              }}
+            />
+
+            {/* CL_max horizontal reference line — kept as the visual ceiling */}
             <ReferenceLine
               y={activeCfg.CLmax}
-              stroke={FLAP_STYLES[activeFlaps].color}
+              stroke={activeColor}
               strokeDasharray="3 3"
               strokeOpacity={0.6}
               label={{
                 value: `CL max = ${activeCfg.CLmax}`,
-                position: 'insideTopRight',
-                fill: FLAP_STYLES[activeFlaps].color,
+                position: 'insideTopLeft',
+                fill: activeColor,
                 fontSize: 10,
+              }}
+            />
+
+            {/* CL_max ↔ Vs marker — the answer to "which point is min speed?" */}
+            <ReferenceDot
+              x={activeCfg.alphaStall}
+              y={activeCfg.CLmax}
+              r={5.5}
+              fill={activeColor}
+              stroke="var(--bg-elev)"
+              strokeWidth={2}
+              ifOverflow="extendDomain"
+              label={{
+                value: `${t.vsLabel} = ${VsKt.toFixed(0)} kt · ${t.vsHint}`,
+                position: 'top',
+                fill: activeColor,
+                fontSize: 11,
+                fontWeight: 700,
+                offset: 8,
               }}
             />
             {FLAP_SETTINGS.map((f) => {
@@ -161,6 +228,41 @@ export function CLChart({ activeFlaps, alpha, CL, showAllFlapCurves, stalled }: 
             />
           </LineChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* ── Pedagogical explanation panel ──
+          Explicit answer to: "which point on the CL/α curve corresponds to
+          the minimum flight speed?" — links the chart's peak to Vs. */}
+      <div
+        className="mt-4 px-3 py-2.5 border-l-[3px]"
+        style={{ borderColor: 'var(--accent)', background: 'var(--bg)' }}
+      >
+        <div
+          className="meta mb-1.5"
+          style={{ fontSize: 9, letterSpacing: '0.15em', color: 'var(--accent)' }}
+        >
+          {t.pedagogyTitle}
+        </div>
+        <p className="text-[11.5px] text-fg-soft leading-relaxed">
+          {t.pedagogyL1}{' '}
+          {t.pedagogyL2}{' '}
+          <span
+            className="inline-block num"
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              padding: '1px 6px',
+              background: 'var(--bg-elev)',
+              border: '1px solid var(--rule)',
+              color: 'var(--text)',
+              margin: '0 2px',
+              fontSize: 11,
+            }}
+          >
+            {t.pedagogyFormula}
+          </span>
+          <strong className="text-fg"> {t.pedagogyL3}</strong>{' '}
+          {t.pedagogyL4}
+        </p>
       </div>
 
       <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs">

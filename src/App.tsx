@@ -71,7 +71,14 @@ export default function App() {
   });
   const t = translations[lang];
   const [showAssumptions, setShowAssumptions] = useState(false);
-  const [consoleCollapsed, setConsoleCollapsed] = useState(false);
+  const [userCollapsed, setUserCollapsed] = useState(false);
+  const [openModalCount, setOpenModalCount] = useState(0);
+  // While ANY chart is fullscreen we force-collapse the pilot console so
+  // the student can still see live state and keep flying with the keyboard
+  // under the modal. The user's last manual choice is restored automatically
+  // when the modal closes (because consoleCollapsed is derived, not stored).
+  const consoleCollapsed = userCollapsed || openModalCount > 0;
+  const setConsoleCollapsed = setUserCollapsed;
   const [keyboardMode, setKeyboardMode] = useState(false);
   // Tracks consecutive keystrokes that aren't bound to anything while keyboard
   // piloting is on. After two unbound key presses we surface a one-shot toast
@@ -300,7 +307,7 @@ export default function App() {
 
         {/* ═══ TOP: charts row ═══ */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 mb-3">
-          <ZoomableCard
+          <ZoomableCard onOpenChange={(o) => setOpenModalCount((n) => n + (o ? 1 : -1))}
             title={t.fig2}
             aside={`α ${state.alpha.toFixed(1)}° · Cₗ ${state.CL.toFixed(2)}`}
           >
@@ -315,7 +322,7 @@ export default function App() {
             )}
           </ZoomableCard>
 
-          <ZoomableCard
+          <ZoomableCard onOpenChange={(o) => setOpenModalCount((n) => n + (o ? 1 : -1))}
             title={t.fig3}
             aside={`D ${Math.round(state.D)} N at ${state.V_kts.toFixed(0)} kt`}
           >
@@ -331,7 +338,7 @@ export default function App() {
 
         {/* ═══ MIDDLE: aircraft views ═══ */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 mb-3">
-          <ZoomableCard
+          <ZoomableCard onOpenChange={(o) => setOpenModalCount((n) => n + (o ? 1 : -1))}
             title={t.fig1a}
             aside={`θ ${theta >= 0 ? '+' : ''}${theta.toFixed(1)}° · ${flaps === 0 ? t.clean : `${t.flapsAside} ${flaps}°`}`}
           >
@@ -354,7 +361,7 @@ export default function App() {
             )}
           </ZoomableCard>
 
-          <ZoomableCard
+          <ZoomableCard onOpenChange={(o) => setOpenModalCount((n) => n + (o ? 1 : -1))}
             title={t.fig1b}
             aside={`φ ${bank.toFixed(0)}° · n ${state.n.toFixed(2)} g`}
           >
