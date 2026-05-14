@@ -1,95 +1,169 @@
-// Cessna 152 (gear-up) side-profile silhouette, outline only.
-// Strokes use currentColor so the silhouette adapts to light/dark themes via
-// the parent's text colour. Coordinates: CG at origin (0, 0); aircraft faces +X.
+// Cessna 152 side profile — drafting/blueprint style.
+//
+// Three-view drafting conventions:
+//   - currentColor on all strokes (theme-adaptive ink)
+//   - hairline construction lines (0.8–1.6 px) with crisp linejoins
+//   - small glass tint on windows so they read at small sizes
+//
+// Coordinates: CG at (0, 0); aircraft faces +X.  Length ≈ 275 px.
+// Anatomy verified against a Cessna 152 three-view: high wing seated on cabin
+// roof, slim vertical fin, single lift strut from wing mid-span to lower
+// fuselage at the door station, tricycle gear omitted for clarity.
 
 interface Props {
   staticProp?: boolean;
+  /** Show small drafting tick marks at major datums. */
+  drafting?: boolean;
 }
 
-const GLASS = '#7dd3fc';
+const GLASS_LIGHT = '#aac8e8';
 
-export function AircraftSilhouette({ staticProp = false }: Props) {
+export function AircraftSilhouette({ staticProp = false, drafting = false }: Props) {
+  // Pick glass tone — uses currentColor luminance via opacity so it works in both themes.
   return (
     <g
       stroke="currentColor"
       strokeLinejoin="round"
       strokeLinecap="round"
-      strokeWidth={1.8}
+      strokeWidth={1.4}
       fill="none"
+      vectorEffect="non-scaling-stroke"
     >
-      {/* horizontal stab */}
-      <polygon points="-110,-4 -160,-6 -160,6 -110,4" />
-
-      {/* vertical fin */}
-      <polygon points="-75,-12 -125,-48 -150,-48 -150,-12" />
-
-      {/* fuselage with integrated cabin hump */}
+      {/* ── Horizontal stabilizer (drawn first, behind the fuselage joinder) ── */}
       <path
-        d="M 92 -3
-           L 80 -10
-           L 50 -12
-           L 30 -12
-           L 18 -34
-           L -25 -34
-           L -42 -14
-           L -120 -10
-           L -150 -7
-           L -150 7
-           L -120 12
-           L -42 16
-           L 50 16
-           L 80 10
-           L 92 3
+        d="M -118 -3
+           L -160 -5
+           L -160  5
+           L -118  3 Z"
+        fill="currentColor"
+        fillOpacity={0.06}
+      />
+
+      {/* ── Vertical fin (small, proportional) ── */}
+      <path
+        d="M -95 -8
+           L -120 -34
+           L -140 -34
+           L -130 -3
            Z"
+        fill="currentColor"
+        fillOpacity={0.06}
       />
+      {/* Fin's leading-edge construction tick */}
+      <line x1={-120} y1={-34} x2={-118} y2={-30} strokeWidth={0.8} opacity={0.5} />
 
-      {/* windshield glass */}
-      <polygon
-        points="18,-32 30,-12 14,-22"
-        fill={GLASS}
-        fillOpacity={0.35}
-        strokeWidth={1.2}
-      />
-      {/* side window glass */}
-      <polygon
-        points="14,-32 -22,-32 -25,-22 14,-22"
-        fill={GLASS}
-        fillOpacity={0.35}
-        strokeWidth={1.2}
-      />
-      {/* door post */}
-      <line x1={14} y1={-32} x2={14} y2={-22} strokeWidth={1} />
-
-      {/* high wing — thin slab */}
-      <rect x={-46} y={-40} width={86} height={5} rx={2.5} />
-      {/* nav light on wing tip */}
-      <circle cx={40} cy={-37.5} r={1.6} fill="#dc2626" stroke="none" />
-
-      {/* lift strut — single clean diagonal */}
-      <line x1={2} y1={-36} x2={40} y2={14} strokeWidth={2.6} />
-
-      {/* spinner */}
+      {/* ── Fuselage outline ── */}
       <path
-        d="M 92 -5 C 100 -4, 104 -2, 105 0 C 104 2, 100 4, 92 5 Z"
-        strokeWidth={1.4}
+        d="M 132   0
+           C 132 -4, 128 -7, 122 -7
+           L 102 -10
+           L  88 -12
+           C  82 -17, 76 -22, 68 -25
+           L  10 -25
+           L  -8 -23
+           L -40 -16
+           L -95 -9
+           L -135 -3
+           L -160  -3
+           L -160   3
+           L -130   3
+           L -90    9
+           L -30   13
+           L  20   13
+           L  68   11
+           L  98    7
+           L 118    4
+           C 128   3, 132  2, 132  0 Z"
+        fill="var(--bg-elev)"
       />
 
-      {/* propeller */}
+      {/* ── High wing — seated on the cabin roof ── */}
+      {/* Wing top edge tucks under the cabin roof line for "integrated" feel */}
+      <path
+        d="M -32 -30
+           L  56 -30
+           L  56 -26
+           L -32 -26 Z"
+        fill="currentColor"
+        fillOpacity={0.05}
+      />
+      {/* Wing leading-edge highlight */}
+      <line x1={56} y1={-30} x2={56} y2={-26} strokeWidth={1.6} />
+
+      {/* ── Wing strut (single diagonal) ── */}
+      <line x1={28} y1={-26} x2={4} y2={12} strokeWidth={1.6} />
+      {/* Strut fittings (small hairline circles) */}
+      <circle cx={28} cy={-26} r={1.4} fill="var(--bg-elev)" strokeWidth={0.9} />
+      <circle cx={4}  cy={12}  r={1.4} fill="var(--bg-elev)" strokeWidth={0.9} />
+
+      {/* ── Cabin glass ── */}
+      {/* Windshield (forward-sloped) */}
+      <path
+        d="M 68 -25
+           L 82 -16
+           L 56 -16
+           Z"
+        fill={GLASS_LIGHT}
+        fillOpacity={0.35}
+        strokeWidth={1}
+      />
+      {/* Door + side window (broken into upper window panel) */}
+      <path
+        d="M 56 -23
+           L 8 -22
+           L 4 -16
+           L 56 -16 Z"
+        fill={GLASS_LIGHT}
+        fillOpacity={0.35}
+        strokeWidth={1}
+      />
+      {/* Door post */}
+      <line x1={32} y1={-23} x2={32} y2={-16} strokeWidth={0.9} />
+      {/* Cabin-rear quarter window (smaller) */}
+      <path
+        d="M  4 -22
+           L -20 -19
+           L -22 -14
+           L  0 -16 Z"
+        fill={GLASS_LIGHT}
+        fillOpacity={0.25}
+        strokeWidth={0.8}
+      />
+      {/* Glass-frame inner reflection lines (faint) */}
+      <line x1={68} y1={-25} x2={82} y2={-16} strokeWidth={0.8} opacity={0.6} />
+
+      {/* ── Spinner & prop ── */}
+      <path
+        d="M 132 0
+           C 138 -2, 142 -1, 145 0
+           C 142 1, 138 2, 132 0 Z"
+        fill="currentColor"
+        fillOpacity={0.15}
+      />
       {staticProp ? (
         <g>
-          <line x1={108} y1={-36} x2={108} y2={36} strokeWidth={2.6} />
-          <circle cx={108} cy={0} r={2} fill="currentColor" stroke="none" />
+          <line x1={148} y1={-34} x2={148} y2={34} strokeWidth={2.2} />
+          <circle cx={148} cy={0} r={1.8} fill="currentColor" stroke="none" />
         </g>
       ) : (
         <g>
-          <ellipse cx={108} cy={0} rx={2.2} ry={36} stroke="none" fill="currentColor" opacity={0.18} />
-          <ellipse cx={108} cy={0} rx={0.8} ry={36} stroke="none" fill="currentColor" opacity={0.5} />
-          <circle cx={108} cy={0} r={2} fill="currentColor" stroke="none" />
+          {/* Prop disk — faint full circle for "spinning" feel */}
+          <ellipse cx={148} cy={0} rx={2} ry={36} fill="currentColor" opacity={0.10} stroke="none" />
+          <ellipse cx={148} cy={0} rx={0.6} ry={36} fill="currentColor" opacity={0.35} stroke="none" />
+          <circle cx={148} cy={0} r={1.8} fill="currentColor" stroke="none" />
         </g>
       )}
 
-      {/* tail stinger */}
-      <line x1={-150} y1={0} x2={-160} y2={1} strokeWidth={1} />
+      {/* ── Drafting marks (optional) — small ticks at key datums ── */}
+      {drafting && (
+        <g opacity={0.55} strokeWidth={0.8}>
+          {/* Wing leading & trailing edge ticks */}
+          <line x1={-32} y1={-38} x2={-32} y2={-34} />
+          <line x1={56}  y1={-38} x2={56}  y2={-34} />
+          {/* Datum vertical line through CG */}
+          <line x1={0} y1={-44} x2={0} y2={-38} strokeDasharray="2 2" />
+        </g>
+      )}
     </g>
   );
 }

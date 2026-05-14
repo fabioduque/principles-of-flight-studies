@@ -3,97 +3,115 @@
 @tailwind utilities;
 
 /*
-   Clean modern tool aesthetic — Linear/Stripe-flavoured.
-   Rounded corners, soft shadows, refined palette, single accent.
+   Drafting / blueprint aesthetic.
+   Light  — vellum drafting paper, sepia rules, navy ink, drafting-red callouts.
+   Dark   — Prussian blueprint, white linework, cyan accents.
+   Typography mixes a textbook serif (Fraunces) for figure titles, a condensed
+   technical sans (IBM Plex Sans Condensed) for chrome, and a precision mono
+   (JetBrains Mono) for all numerals.
 */
 
 :root {
-  /* Light — warm mid-grey background, white panels (not glaring white) */
-  --bg:         #e6e6ec;
-  --bg-elev:    #fafafb;
-  --bg-soft:    #eeeef2;
-  --bg-hover:   #dfdfe6;
-  --border:     #cdcdd6;
-  --border-strong: #b1b1bd;
+  /* Vellum drafting paper */
+  --bg:         #e7dec3;   /* warm parchment field */
+  --bg-elev:    #f3ecd5;   /* paper plate */
+  --bg-soft:    #ddd2b3;   /* darker margin */
+  --bg-hover:   #d5c89f;
+  --paper-tint: rgba(74, 51, 18, 0.04);
 
-  --text:       #15151c;
-  --text-soft:  #4d4d59;
-  --text-mute:  #8a8a96;
+  --border:        #b69e6d;
+  --border-strong: #806435;
+  --rule:          #56432a;   /* hairline drafting rules */
 
-  /* Vivid accent — cyan-ish, modern */
-  --accent:     #0891b2;   /* cyan-600 */
-  --accent-hover: #0e7490;
-  --accent-soft: #cffafe;
+  --text:       #1a233c;     /* deep navy ink */
+  --text-soft:  #3b4566;
+  --text-mute:  #7a7458;
 
-  /* High-contrast semantic colours */
-  --c-lift:     #2563eb;   /* blue-600 */
-  --c-weight:   #e11d48;   /* rose-600 */
-  --c-thrust:   #059669;   /* emerald-600 */
-  --c-drag:     #d97706;   /* amber-600 */
-  --c-magenta:  #c026d3;   /* fuchsia-600 */
-  --c-cg:       #ea580c;   /* orange-600 */
+  /* Drafting accent — printer's red, used sparingly */
+  --accent:     #b03423;
+  --accent-hover: #8c2818;
+  --accent-soft: rgba(176, 52, 35, 0.12);
 
-  --grid-line:    rgba(21, 21, 28, 0.07);
-  --grid-strong:  rgba(21, 21, 28, 0.12);
+  /* Force vector palette — semantic, muted to the paper feel */
+  --c-lift:     #1f3f8a;   /* navy/ink — the dominant force */
+  --c-weight:   #b03423;   /* drafting red */
+  --c-thrust:   #2f6b3b;   /* forest green */
+  --c-drag:     #a86b1f;   /* burnt sienna */
+  --c-magenta:  #7a2a6b;   /* aubergine */
+  --c-cg:       #c75a17;   /* terracotta */
 
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05), 0 1px 6px rgba(0,0,0,0.04);
-  --shadow:    0 4px 16px -2px rgba(0,0,0,0.10);
+  --grid-line:    rgba(31, 63, 138, 0.10);
+  --grid-strong:  rgba(31, 63, 138, 0.22);
+
+  --shadow-sm: 0 1px 0 rgba(86, 67, 42, 0.20);
+  --shadow:    0 2px 0 rgba(86, 67, 42, 0.25), 0 6px 18px -8px rgba(31, 35, 60, 0.20);
+
+  /* Sky/ground tinting on diagrams */
+  --sky:        rgba(31, 63, 138, 0.05);
+  --ground:     rgba(168, 107, 31, 0.10);
 }
 
 .dark {
-  /* Dark — medium charcoal, not pitch black; soft contrast */
-  --bg:         #1f1f25;
-  --bg-elev:    #2b2b32;
-  --bg-soft:    #25252b;
-  --bg-hover:   #353540;
-  --border:     #3a3a44;
-  --border-strong: #51515d;
+  /* Prussian blueprint */
+  --bg:         #0a1733;
+  --bg-elev:    #102348;
+  --bg-soft:    #0c1c3d;
+  --bg-hover:   #163055;
+  --paper-tint: rgba(255, 255, 255, 0.025);
 
-  --text:       #f4f4f6;
-  --text-soft:  #b6b6c0;
-  --text-mute:  #80808a;
+  --border:        #2a4378;
+  --border-strong: #4b6ba8;
+  --rule:          #95b7e5;
 
-  /* Bright cyan accent — pops on charcoal */
-  --accent:     #22d3ee;   /* cyan-400 */
-  --accent-hover: #67e8f9;
-  --accent-soft: rgba(34, 211, 238, 0.18);
+  --text:       #e9eef9;
+  --text-soft:  #a8b9d8;
+  --text-mute:  #7287a8;
 
-  --c-lift:     #60a5fa;
-  --c-weight:   #fb7185;
-  --c-thrust:   #34d399;
-  --c-drag:     #fbbf24;
-  --c-magenta:  #e879f9;
-  --c-cg:       #fb923c;
+  --accent:     #ffb454;        /* warm amber against blueprint */
+  --accent-hover: #ffce8a;
+  --accent-soft: rgba(255, 180, 84, 0.18);
 
-  --grid-line:    rgba(244, 244, 246, 0.06);
-  --grid-strong:  rgba(244, 244, 246, 0.12);
+  --c-lift:     #82b4ff;
+  --c-weight:   #ff8c7a;
+  --c-thrust:   #7fd9a4;
+  --c-drag:     #ffc25c;
+  --c-magenta:  #f78bdb;
+  --c-cg:       #ffb454;
 
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
-  --shadow:    0 8px 28px -4px rgba(0,0,0,0.6);
+  --grid-line:    rgba(255, 255, 255, 0.07);
+  --grid-strong:  rgba(255, 255, 255, 0.18);
+
+  --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.45);
+  --shadow:    0 2px 0 rgba(0, 0, 0, 0.5), 0 14px 32px -10px rgba(0, 0, 0, 0.7);
+
+  --sky:        rgba(130, 180, 255, 0.06);
+  --ground:     rgba(255, 194, 92, 0.05);
 }
 
 @layer base {
-  html {
-    color-scheme: light;
-  }
-  html.dark {
-    color-scheme: dark;
-  }
+  html { color-scheme: light; }
+  html.dark { color-scheme: dark; }
+
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'IBM Plex Sans Condensed', system-ui, sans-serif;
     background-color: var(--bg);
     color: var(--text);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     min-height: 100vh;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    /* paper texture: subtle noise + fibers */
+    background-image:
+      radial-gradient(circle at 20% 30%, var(--paper-tint), transparent 40%),
+      radial-gradient(circle at 80% 70%, var(--paper-tint), transparent 50%),
+      repeating-linear-gradient(0deg, transparent 0 2px, var(--paper-tint) 2px 3px);
   }
 
   h1, h2, h3, h4 {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Fraunces', Georgia, serif;
     color: var(--text);
-    letter-spacing: -0.018em;
-    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    font-variation-settings: 'SOFT' 30, 'WONK' 0, 'opsz' 144;
   }
 
   ::selection {
@@ -105,93 +123,140 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
     background: var(--border-strong);
-    border-radius: 5px;
-    border: 2px solid var(--bg);
+    border-radius: 0;
   }
-  ::-webkit-scrollbar-thumb:hover { background: var(--text-mute); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-soft); }
 }
 
 @layer components {
 
-  /* ─── Card / panel surface ─── */
+  /* ─── Paper plate (card) — drafting style, hairline ruled, slight tactile shadow ─── */
   .card {
     background: var(--bg-elev);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 2px;
     box-shadow: var(--shadow-sm);
-    overflow: hidden;
+    position: relative;
   }
+  /* Tiny register/corner mark in each corner — a drafting-paper detail */
+  .card::before, .card::after {
+    content: '';
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border: 1px solid var(--rule);
+    opacity: 0.45;
+    pointer-events: none;
+  }
+  .card::before { top: 3px; left: 3px; border-right: none; border-bottom: none; }
+  .card::after  { bottom: 3px; right: 3px; border-left: none; border-top: none; }
 
   .card-header {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
     gap: 0.75rem;
-    padding: 0.65rem 0.95rem;
+    padding: 0.55rem 0.95rem 0.5rem;
     border-bottom: 1px solid var(--border);
-    background: var(--bg-elev);
+    background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg-soft) 100%);
   }
   .card-header-title {
-    font-size: 0.78rem;
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--text);
-    letter-spacing: -0.005em;
+    letter-spacing: -0.01em;
+    font-variation-settings: 'SOFT' 30, 'WONK' 0, 'opsz' 32;
+    font-style: italic;
   }
   .card-header-aside {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     color: var(--text-soft);
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── Stamp / figure caption ─── */
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: 'IBM Plex Sans Condensed', system-ui, sans-serif;
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-soft);
+    padding: 0.18rem 0.5rem;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    border-radius: 0;
+  }
+  .stamp-num {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    font-weight: 600;
   }
 
   /* ─── Meta caption ─── */
   .meta {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem;
+    font-family: 'IBM Plex Sans Condensed', system-ui, sans-serif;
+    font-size: 0.66rem;
     color: var(--text-soft);
-    letter-spacing: 0.02em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   /* ─── Numeric readout ─── */
   .num {
     font-family: 'JetBrains Mono', monospace;
-    font-feature-settings: 'tnum' 1, 'zero' 1;
+    font-feature-settings: 'tnum' 1, 'zero' 1, 'ss01' 1;
     font-weight: 500;
     letter-spacing: -0.01em;
   }
 
+  .display-num {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'SOFT' 20, 'WONK' 1, 'opsz' 144;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    font-feature-settings: 'tnum' 1;
+  }
+
   /* ─── Buttons ─── */
   .btn {
-    font-family: inherit;
-    font-size: 0.8rem;
+    font-family: 'IBM Plex Sans Condensed', system-ui, sans-serif;
+    font-size: 0.78rem;
     font-weight: 500;
-    padding: 0.45rem 0.85rem;
-    background: var(--bg-soft);
+    letter-spacing: 0.02em;
+    padding: 0.4rem 0.75rem;
+    background: var(--bg-elev);
     color: var(--text);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 0;
     cursor: pointer;
-    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.05s;
     line-height: 1.2;
     white-space: nowrap;
+    text-transform: uppercase;
   }
   .btn:hover {
     background: var(--bg-hover);
     border-color: var(--border-strong);
   }
-  .btn:active { transform: scale(0.98); }
+  .btn:active { transform: translateY(1px); }
   .btn.is-active {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
+    background: var(--text);
+    color: var(--bg-elev);
+    border-color: var(--text);
   }
   .btn.is-active:hover {
-    background: var(--accent-hover);
-  }
-  .dark .btn.is-active {
-    color: var(--bg);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg-elev);
   }
 
   .btn-ghost {
@@ -209,30 +274,30 @@
     border-color: var(--accent);
   }
 
-  /* Compact pill button */
+  /* Compact pill — for theme switcher etc. */
   .pill {
-    font-family: inherit;
-    font-size: 0.72rem;
-    font-weight: 500;
-    padding: 0.35rem 0.7rem;
-    background: var(--bg-soft);
+    font-family: 'IBM Plex Sans Condensed', system-ui, sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 0.3rem 0.7rem;
+    background: var(--bg-elev);
     color: var(--text-soft);
     border: 1px solid var(--border);
-    border-radius: 999px;
+    border-radius: 0;
     cursor: pointer;
-    transition: background 0.12s, border-color 0.12s, color 0.12s;
-    text-transform: capitalize;
+    transition: all 0.12s;
+    text-transform: uppercase;
   }
   .pill:hover {
     color: var(--text);
     background: var(--bg-hover);
   }
   .pill.is-active {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
+    background: var(--text);
+    color: var(--bg-elev);
+    border-color: var(--text);
   }
-  .dark .pill.is-active { color: var(--bg); }
 
   /* ─── Slider ─── */
   input[type='range'] {
@@ -244,37 +309,37 @@
     cursor: pointer;
   }
   input[type='range']::-webkit-slider-runnable-track {
-    height: 4px;
-    background: var(--bg-hover);
-    border-radius: 999px;
+    height: 3px;
+    background: var(--border-strong);
+    border-radius: 0;
   }
   input[type='range']::-moz-range-track {
-    height: 4px;
-    background: var(--bg-hover);
-    border-radius: 999px;
+    height: 3px;
+    background: var(--border-strong);
+    border-radius: 0;
   }
   input[type='range']::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 999px;
+    width: 14px;
+    height: 14px;
+    border-radius: 0;
     background: var(--accent);
-    border: 2px solid var(--bg-elev);
+    border: 1px solid var(--bg-elev);
     margin-top: -6px;
     box-shadow: var(--shadow-sm);
     transition: transform 0.12s;
   }
   input[type='range']::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 999px;
+    width: 14px;
+    height: 14px;
+    border-radius: 0;
     background: var(--accent);
-    border: 2px solid var(--bg-elev);
+    border: 1px solid var(--bg-elev);
     box-shadow: var(--shadow-sm);
   }
   input[type='range']:hover::-webkit-slider-thumb {
-    transform: scale(1.15);
+    transform: scale(1.18);
   }
   input[type='range']:focus { outline: none; }
   input[type='range']:focus-visible::-webkit-slider-thumb {
@@ -282,14 +347,39 @@
     outline-offset: 2px;
   }
 
-  /* Diagram-grid background — subtle */
+  /* ─── Drafting grid background ─── */
   .grid-bg {
     background-color: var(--bg-elev);
     background-image:
+      /* Major rules every 80px */
+      linear-gradient(var(--grid-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px),
+      /* Minor rules every 16px */
       linear-gradient(var(--grid-line) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 24px 24px;
-    background-position: 0 0;
+    background-size:
+      80px 80px,
+      80px 80px,
+      16px 16px,
+      16px 16px;
+    background-position: 0 0, 0 0, 0 0, 0 0;
+  }
+
+  /* Sky/ground tint on diagram panels (subtle horizon hint) */
+  .horizon-bg {
+    background-color: var(--bg-elev);
+    background-image:
+      linear-gradient(180deg, var(--sky) 0%, var(--sky) 50%, var(--ground) 50%, var(--ground) 100%),
+      linear-gradient(var(--grid-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px),
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      80px 80px,
+      80px 80px,
+      16px 16px,
+      16px 16px;
   }
 }
 
@@ -307,4 +397,6 @@
   .bg-elev         { background-color: var(--bg-elev); }
   .bg-soft         { background-color: var(--bg-soft); }
   .border-app      { border-color: var(--border); }
+  .border-rule     { border-color: var(--rule); }
+  .font-display    { font-family: 'Fraunces', Georgia, serif; }
 }

@@ -1,7 +1,11 @@
-// Front-view (looking from the tail forward) of the C152, showing the wings
-// banked by φ. The lift vector tilts with the wings; weight stays vertical.
-// The vertical component of lift (L·cos φ) must support W; the horizontal
-// component (L·sin φ) provides the centripetal force that turns the airplane.
+// Aft view (looking from behind the airplane toward the nose) — drafting style.
+// The C152 is drawn anatomically: high wing seated *above* the fuselage, with
+// the cabin hanging below the wing centerline; V-strut from lower fuselage to
+// wing underside on each side; prop disk visible as a faint translucent circle;
+// vertical fin and horizontal stab behind. Bank rotates the airframe AND the
+// lift vector; weight stays vertical. The L·cosφ / L·sinφ decomposition shows
+// the perpendicular force balance and the centripetal component that turns the
+// airplane. A curved turn-arrow indicates the direction of acceleration.
 
 import type { FlightState } from '../physics';
 import { WEIGHT_N } from '../physics';
@@ -13,13 +17,13 @@ interface Props {
 const COLOR_LIFT = 'var(--c-lift)';
 const COLOR_WEIGHT = 'var(--c-weight)';
 const COLOR_COMP = 'var(--c-magenta)';
+const COLOR_HORIZON = 'var(--text-mute)';
 
 export function BankView({ state }: Props) {
   const phi = state.bankDeg;
   const phiRad = (phi * Math.PI) / 180;
   const n = state.L / WEIGHT_N;
 
-  // Pixel scaling: weight = 100 px (sqrt scale to match the side view).
   const REF = 90;
   const lengthFor = (F: number) =>
     Math.min(Math.sqrt(Math.max(0, F) / WEIGHT_N) * REF, 220);
@@ -27,24 +31,21 @@ export function BankView({ state }: Props) {
   const Lpx = lengthFor(state.L);
   const Wpx = lengthFor(WEIGHT_N);
 
-  // Total lift in screen coords (up = -Y), tilted to the LEFT for positive bank
-  // (banking right turns the lift vector to the right in side view, but a
-  // "looking forward" view means we see the lift tilt to OUR left if pilot
-  // banks right). We pick right-bank visualisation: pilot's right wing drops,
-  // lift vector goes to +x direction at top → tilted to the right.
+  // Right bank visualization: bank-right tilts the lift vector to the right.
   const Lx = Lpx * Math.sin(phiRad);
   const Ly = -Lpx * Math.cos(phiRad);
 
-  // Vertical and horizontal components for the decomposition lines.
-  const Lvert_screen = Ly; // vertical (up) component = L·cos φ
-  const Lhoriz_screen = Lx; // horizontal component = L·sin φ
+  // Centripetal turn-arrow: arc on whichever side the lift is tilting toward,
+  // showing the direction the airplane is accelerating.
+  const turnSide = phi >= 0 ? 1 : -1;
+  const showTurn = Math.abs(phi) > 4;
 
   return (
     <svg
       viewBox="-220 -200 440 360"
       className="w-full h-full"
       role="img"
-      aria-label={`Front view, banked ${phi.toFixed(0)} degrees, load factor ${n.toFixed(2)}`}
+      aria-label={`Rear view of Cessna 152, banked ${phi.toFixed(0)} degrees, load factor ${n.toFixed(2)}`}
     >
       <defs>
         <marker id="bv-arrow-L" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -56,44 +57,84 @@ export function BankView({ state }: Props) {
         <marker id="bv-arrow-C" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 Z" fill={COLOR_COMP} />
         </marker>
+        <marker id="bv-arrow-turn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 Z" fill="var(--accent)" />
+        </marker>
       </defs>
 
-      {/* horizon */}
+      {/* ── Horizon datum (drafting dashed rule + small cardinal ticks) ── */}
       <line
-        x1={-200}
+        x1={-210}
         y1={0}
-        x2={200}
+        x2={210}
         y2={0}
-        stroke="var(--text-mute)"
-        strokeDasharray="6 6"
+        stroke={COLOR_HORIZON}
+        strokeDasharray="6 4"
         strokeWidth={0.9}
       />
+      {[-180, -120, -60, 60, 120, 180].map((x) => (
+        <line key={x} x1={x} y1={-2} x2={x} y2={2} stroke={COLOR_HORIZON} strokeWidth={0.6} opacity={0.7} />
+      ))}
+      <text x={-208} y={-5} fill={COLOR_HORIZON} fontSize={8.5} fontFamily="'IBM Plex Sans Condensed', system-ui" letterSpacing="0.1em">
+        HORIZON
+      </text>
 
-      {/* aircraft front-view silhouette, rotated by bank angle */}
-      <g transform={`rotate(${phi})`} stroke="currentColor" strokeLinejoin="round" fill="none" strokeWidth={1.8}>
-        {/* wings — long thin bar */}
-        <rect x={-110} y={-3} width={220} height={6} rx={3} />
-        {/* wing-tip dihedral marks (subtle uptick on each end) */}
-        <line x1={-110} y1={-3} x2={-118} y2={-7} />
-        <line x1={110} y1={-3} x2={118} y2={-7} />
+      {/* ── Airframe (rotates with bank around CG = origin) ── */}
+      <g transform={`rotate(${phi})`}>
+        {/* Prop disk — behind everything */}
+        <circle cx={0} cy={-3} r={64} fill="currentColor" opacity={0.04} stroke="none" />
+        <circle cx={0} cy={-3} r={64} fill="none" stroke="currentColor" strokeWidth={0.7} strokeDasharray="1 3" opacity={0.45} />
 
-        {/* fuselage — slightly rounded rectangle in centre */}
-        <rect x={-12} y={-22} width={24} height={28} rx={6} />
-        {/* canopy hint */}
-        <rect x={-7} y={-19} width={14} height={9} rx={3} fill="var(--c-lift)" fillOpacity={0.35} strokeWidth={0.9} />
+        {/* Horizontal stab (behind fuselage in 3D, drawn first) */}
+        <g stroke="currentColor" strokeWidth={1.2} strokeLinejoin="round" fill="currentColor">
+          <path d="M -56 6 L 56 6 L 56 12 L -56 12 Z" fillOpacity={0.05} />
+        </g>
 
-        {/* vertical fin sticking up behind the canopy */}
-        <path d="M -3 -32 L 0 -46 L 3 -32 Z" />
+        {/* Vertical fin — narrow, sticking up behind the cabin */}
+        <path d="M -5 -8 L -3 -42 L 3 -42 L 5 -8 Z" fill="currentColor" fillOpacity={0.08} stroke="currentColor" strokeWidth={1.2} strokeLinejoin="round" />
 
-        {/* horizontal stab seen edge-on at the back — small bar */}
-        <line x1={-22} y1={6} x2={22} y2={6} strokeWidth={1.4} />
+        {/* Fuselage cross-section — rounded top, flat bottom (rear projection) */}
+        <path
+          d="M -13 -18
+             C -13 -22, -8 -25, 0 -25
+             C 8 -25, 13 -22, 13 -18
+             L 13 14
+             C 13 18, 8 19, 0 19
+             C -8 19, -13 18, -13 14
+             Z"
+          fill="var(--bg-elev)"
+          stroke="currentColor"
+          strokeWidth={1.4}
+        />
 
-        {/* port-wing red nav light, starboard-wing green */}
-        <circle cx={-110} cy={0} r={2.6} fill="var(--c-weight)" stroke="none" />
-        <circle cx={110} cy={0} r={2.6} fill="var(--c-thrust)" stroke="none" />
+        {/* Cabin glass — small window slits each side */}
+        <path d="M -11 -21 L -11 -14 L 11 -14 L 11 -21 Z" fill="#9bd5ff" fillOpacity={0.30} stroke="currentColor" strokeWidth={0.9} />
+        <line x1={0} y1={-21} x2={0} y2={-14} stroke="currentColor" strokeWidth={0.7} opacity={0.7} />
+
+        {/* High wing — long thin slab sitting on top of cabin */}
+        <path d="M -116 -27 L 116 -27 L 116 -22 L -116 -22 Z" fill="currentColor" fillOpacity={0.10} stroke="currentColor" strokeWidth={1.4} strokeLinejoin="round" />
+
+        {/* Subtle dihedral hint — wingtip uptick (real C152 dihedral is ~1.5°) */}
+        <line x1={116} y1={-22} x2={120} y2={-23} stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+        <line x1={-116} y1={-22} x2={-120} y2={-23} stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+
+        {/* V-strut — one each side, fuselage bottom corner to wing underside */}
+        <line x1={-10} y1={16} x2={-46} y2={-22} stroke="currentColor" strokeWidth={1.3} />
+        <line x1={10}  y1={16} x2={46}  y2={-22} stroke="currentColor" strokeWidth={1.3} />
+        {/* Strut attachment fittings — small drafting dots */}
+        <circle cx={-10} cy={16}  r={1.2} fill="var(--bg-elev)" stroke="currentColor" strokeWidth={0.7} />
+        <circle cx={10}  cy={16}  r={1.2} fill="var(--bg-elev)" stroke="currentColor" strokeWidth={0.7} />
+        <circle cx={-46} cy={-22} r={1.2} fill="var(--bg-elev)" stroke="currentColor" strokeWidth={0.7} />
+        <circle cx={46}  cy={-22} r={1.2} fill="var(--bg-elev)" stroke="currentColor" strokeWidth={0.7} />
+
+        {/* Wingtip nav lights — port red, starboard green */}
+        <circle cx={-118} cy={-24.5} r={2.4} fill="var(--c-weight)" stroke="none" />
+        <circle cx={ 118} cy={-24.5} r={2.4} fill="var(--c-thrust)" stroke="none" />
       </g>
 
-      {/* lift vector (tilted with the wings) */}
+      {/* ── Force vectors (do NOT rotate with airframe — only L tilts) ── */}
+
+      {/* Lift vector (tilts with the wings) */}
       <line
         x1={0}
         y1={0}
@@ -105,7 +146,7 @@ export function BankView({ state }: Props) {
         markerEnd="url(#bv-arrow-L)"
       />
 
-      {/* weight (always down) */}
+      {/* Weight (always down) */}
       <line
         x1={0}
         y1={0}
@@ -117,114 +158,109 @@ export function BankView({ state }: Props) {
         markerEnd="url(#bv-arrow-W)"
       />
 
-      {/* dashed projection: L·cos φ (vertical component) */}
+      {/* L·cosφ vertical projection */}
       <line
         x1={0}
         y1={0}
-        x2={0}
-        y2={Lvert_screen}
-        stroke={COLOR_COMP}
-        strokeWidth={1.6}
-        strokeDasharray="4 3"
-        opacity={0.8}
-      />
-      {/* dashed projection: L·sin φ (horizontal component) */}
-      <line
-        x1={0}
-        y1={0}
-        x2={Lhoriz_screen}
-        y2={0}
-        stroke={COLOR_COMP}
-        strokeWidth={1.6}
-        strokeDasharray="4 3"
-        opacity={0.8}
-      />
-      {/* small dashed "corner" connector */}
-      <line
-        x1={Lx}
-        y1={Ly}
-        x2={Lx}
-        y2={0}
-        stroke={COLOR_COMP}
-        strokeWidth={0.6}
-        strokeDasharray="2 3"
-        opacity={0.5}
-      />
-      <line
-        x1={Lx}
-        y1={Ly}
         x2={0}
         y2={Ly}
         stroke={COLOR_COMP}
-        strokeWidth={0.6}
-        strokeDasharray="2 3"
-        opacity={0.5}
+        strokeWidth={1.4}
+        strokeDasharray="5 3"
+        opacity={0.85}
       />
+      {/* L·sinφ horizontal projection */}
+      <line
+        x1={0}
+        y1={0}
+        x2={Lx}
+        y2={0}
+        stroke={COLOR_COMP}
+        strokeWidth={1.4}
+        strokeDasharray="5 3"
+        opacity={0.85}
+      />
+      {/* Parallelogram corner closure */}
+      <line x1={Lx} y1={Ly} x2={Lx} y2={0} stroke={COLOR_COMP} strokeWidth={0.6} strokeDasharray="2 3" opacity={0.5} />
+      <line x1={Lx} y1={Ly} x2={0}  y2={Ly} stroke={COLOR_COMP} strokeWidth={0.6} strokeDasharray="2 3" opacity={0.5} />
 
-      {/* labels */}
-      <text
-        x={Lx + (Lx >= 0 ? 6 : -6)}
-        y={Ly - 6}
-        fill={COLOR_LIFT}
-        fontSize={11}
-        fontWeight={700}
-        fontFamily="ui-sans-serif, system-ui"
-        textAnchor={Lx >= 0 ? 'start' : 'end'}
-      >
-        L = {Math.round(state.L).toLocaleString()} N
-      </text>
-      <text
-        x={6}
-        y={Wpx + 14}
-        fill={COLOR_WEIGHT}
-        fontSize={11}
-        fontWeight={700}
-        fontFamily="ui-sans-serif, system-ui"
-      >
-        W = {WEIGHT_N.toLocaleString()} N
-      </text>
-      <text
-        x={-4}
-        y={Lvert_screen / 2 + 4}
-        fill={COLOR_COMP}
-        fontSize={10}
-        textAnchor="end"
-        fontFamily="ui-sans-serif, system-ui"
-      >
-        L cos φ = {Math.round(state.L * Math.cos(phiRad)).toLocaleString()} N
-      </text>
-      <text
-        x={Lhoriz_screen / 2}
-        y={-6}
-        fill={COLOR_COMP}
-        fontSize={10}
-        textAnchor="middle"
-        fontFamily="ui-sans-serif, system-ui"
-      >
-        L sin φ = {Math.round(state.L * Math.sin(phiRad)).toLocaleString()} N
-      </text>
+      {/* ── Turn-direction arrow — curved arc showing centripetal acceleration ── */}
+      {showTurn && (
+        <g>
+          <path
+            d={`M ${turnSide * 64} 36
+                A 36 18 0 0 ${turnSide > 0 ? 1 : 0} ${turnSide * 132} 36`}
+            fill="none"
+            stroke="var(--accent)"
+            strokeWidth={1.6}
+            strokeDasharray="4 2"
+            markerEnd="url(#bv-arrow-turn)"
+            opacity={0.9}
+          />
+          <text
+            x={turnSide * 96}
+            y={56}
+            fill="var(--accent)"
+            fontSize={9.5}
+            fontFamily="'IBM Plex Sans Condensed', system-ui"
+            fontWeight={600}
+            letterSpacing="0.08em"
+            textAnchor="middle"
+          >
+            TURN
+          </text>
+        </g>
+      )}
 
-      {/* bank-angle label */}
-      <text
-        x={-210}
-        y={-170}
-        fill="var(--text)"
-        fontSize={13}
-        fontWeight={600}
-        fontFamily="'Plus Jakarta Sans', system-ui, sans-serif"
-      >
-        Bank φ = {phi.toFixed(0)}°
-      </text>
-      <text
-        x={-210}
-        y={-150}
-        fill="var(--c-cg)"
-        fontSize={17}
-        fontWeight={700}
-        fontFamily="'JetBrains Mono', monospace"
-      >
-        n = {n.toFixed(2)} g
-      </text>
+      {/* ── Labels (drafting style, leader-style) ── */}
+      <g fontFamily="'JetBrains Mono', monospace">
+        {/* L */}
+        <g transform={`translate(${Lx + (Lx >= 0 ? 10 : -10)}, ${Ly - 10})`}>
+          <text fill={COLOR_LIFT} fontSize={10.5} fontWeight={700} textAnchor={Lx >= 0 ? 'start' : 'end'}>
+            L
+          </text>
+          <text fill={COLOR_LIFT} fontSize={9} y={11} textAnchor={Lx >= 0 ? 'start' : 'end'}>
+            {Math.round(state.L).toLocaleString()} N
+          </text>
+        </g>
+
+        {/* W */}
+        <text x={8} y={Wpx + 6} fill={COLOR_WEIGHT} fontSize={10.5} fontWeight={700}>W</text>
+        <text x={8} y={Wpx + 17} fill={COLOR_WEIGHT} fontSize={9}>{WEIGHT_N.toLocaleString()} N</text>
+
+        {/* L·cos φ */}
+        <text x={-6} y={Ly / 2 + 3} fill={COLOR_COMP} fontSize={9.5} textAnchor="end">
+          L·cos φ = {Math.round(state.L * Math.cos(phiRad)).toLocaleString()} N
+        </text>
+
+        {/* L·sin φ */}
+        {Math.abs(Lx) > 8 && (
+          <text
+            x={Lx / 2}
+            y={-6}
+            fill={COLOR_COMP}
+            fontSize={9.5}
+            textAnchor="middle"
+          >
+            L·sin φ = {Math.round(Math.abs(state.L * Math.sin(phiRad))).toLocaleString()} N
+          </text>
+        )}
+      </g>
+
+      {/* ── Title-block style readouts (top-left) ── */}
+      <g>
+        <rect x={-215} y={-195} width={130} height={50} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.8} />
+        <text x={-208} y={-180} fill="var(--text-soft)" fontSize={8.5} fontFamily="'IBM Plex Sans Condensed', system-ui" letterSpacing="0.14em" fontWeight={600}>
+          FIG · AFT VIEW
+        </text>
+        <line x1={-215} y1={-172} x2={-85} y2={-172} stroke="var(--rule)" strokeWidth={0.6} opacity={0.7} />
+        <text x={-208} y={-160} fill="var(--text)" fontSize={11} fontFamily="'JetBrains Mono', monospace" fontWeight={500}>
+          φ = {phi >= 0 ? '+' : ''}{phi.toFixed(0)}°
+        </text>
+        <text x={-208} y={-148} fill="var(--accent)" fontSize={11} fontFamily="'JetBrains Mono', monospace" fontWeight={600}>
+          n = {n.toFixed(2)} g
+        </text>
+      </g>
     </svg>
   );
 }

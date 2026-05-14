@@ -1,8 +1,11 @@
-// Attitude indicator + D-pad + pitch/bank presets.
-// Drag the AI face to fly. Use the D-pad to nudge by fine steps.
-// Presets snap to common pitch (-5/0/+5/+10°) and bank (0/10/30/60°) values.
+// Attitude indicator with presets arranged AROUND the bezel.
+//   • Bank presets sit on the bottom arc as clickable tick-buttons.
+//   • Pitch presets stack as a vertical "tape" to the right of the AI.
+//   • A compact 4-way nudge cross provides fine adjustment.
+//
+// Increments: pitch step = 2.5° · bank step = 5°.
 
-import { useRef, useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 interface Props {
   theta: number;
@@ -19,20 +22,27 @@ function clamp(v: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, v));
 }
 
-const VIEW_R = 100;
-const INNER_R = 88;
+const PITCH_STEP = 2.5;
+const BANK_STEP = 5;
+
+const PITCH_PRESETS = [20, 15, 10, 5, 0, -5, -10];
+const BANK_PRESETS = [-60, -45, -30, -15, 0, 15, 30, 45, 60];
+
+const VIEW_R = 110;
+const INNER_R = 92;
 const PITCH_PX_PER_DEG = 4;
 
-const SKY = '#4d9be0';
-const GROUND = '#8a5a3c';
-const HORIZON_LINE = '#ffffff';
-const SYMBOL = '#fbbf24';
-const SCALE = '#f4f4f6';
+const SKY = '#1f3f8a';
+const SKY_LIGHT = '#3a6cd0';
+const GROUND = '#7a4a1d';
+const GROUND_LIGHT = '#a86b1f';
+const HORIZON_LINE = '#f3ecd5';
+const SYMBOL = '#ffb454';
+const SCALE = '#f3ecd5';
 
-const PITCH_PRESETS = [-10, -5, 0, 5, 10, 15, 30];
-const BANK_PRESETS = [0, 10, 30, 60];
-const PITCH_STEP = 0.5;
-const BANK_STEP = 1;
+function roundTo(v: number, step: number) {
+  return Math.round(v / step) * step;
+}
 
 export function AttitudeControl({
   theta,
@@ -40,9 +50,9 @@ export function AttitudeControl({
   setTheta,
   setBank,
   pitchMin = -15,
-  pitchMax = 45,
+  pitchMax = 30,
   bankMax = 75,
-  size = 150,
+  size = 168,
 }: Props) {
   const ref = useRef<SVGSVGElement>(null);
 
@@ -62,11 +72,10 @@ export function AttitudeControl({
       const dy = ((e as PointerEvent).clientY - cy) / (rect.height / 2);
 
       const newBank = clamp(dx * bankMax, -bankMax, bankMax);
-      // Yoke-style: pull back (cursor down) = nose UP.
       const newPitch = clamp(pitchMid + dy * halfPitchRange, pitchMin, pitchMax);
 
-      setBank(Math.round(newBank * 10) / 10);
-      setTheta(Math.round(newPitch * 2) / 2);
+      setBank(roundTo(newBank, BANK_STEP));
+      setTheta(roundTo(newPitch, PITCH_STEP));
     },
     [bankMax, pitchMin, pitchMax, pitchMid, halfPitchRange, setBank, setTheta],
   );
@@ -87,178 +96,262 @@ export function AttitudeControl({
   };
 
   const nudgePitch = (d: number) =>
-    setTheta(clamp(Math.round((theta + d) * 2) / 2, pitchMin, pitchMax));
+    setTheta(clamp(roundTo(theta + d, PITCH_STEP), pitchMin, pitchMax));
   const nudgeBank = (d: number) =>
-    setBank(clamp(Math.round((bank + d) * 10) / 10, -bankMax, bankMax));
+    setBank(clamp(roundTo(bank + d, BANK_STEP), -bankMax, bankMax));
 
-  const pitchLadder = [-15, -10, -5, 5, 10, 15, 20, 25, 30, 40];
-  const bankMajor = [-60, -45, -30, 30, 45, 60];
-  const bankMinor = [-20, -10, 10, 20];
+  const pitchLadder = [-15, -10, -5, 5, 10, 15, 20, 25, 30];
+  const bankMajorMarks = [-60, -45, -30, 30, 45, 60];
+  const bankMinorMarks = [-20, -10, 10, 20];
+
+  // Bank preset positions on the BOTTOM arc — angle = preset value, radius just
+  // outside the dial. Reflected to bottom by +180° rotation.
+  const bezelBankR = VIEW_R + 14;
+  const bezelBankInner = VIEW_R + 4;
 
   return (
-    <div className="flex items-start gap-3 select-none">
-      {/* ── Attitude indicator ── */}
+    <div className="select-none flex items-stretch gap-3">
+      {/* ── AI + bezel bank presets ── */}
       <div className="flex flex-col items-center">
-        <svg
-          ref={ref}
-          viewBox={`-${VIEW_R} -${VIEW_R} ${VIEW_R * 2} ${VIEW_R * 2}`}
-          width={size}
-          height={size}
-          onPointerDown={handlePointerDown}
-          className="touch-none cursor-grab active:cursor-grabbing"
-          style={{ display: 'block' }}
-          aria-label="Attitude indicator — drag to set pitch and bank"
-          role="slider"
-          aria-valuemin={-bankMax}
-          aria-valuemax={bankMax}
-          aria-valuenow={bank}
-        >
-          <defs>
-            <clipPath id="ai-clip">
-              <circle cx={0} cy={0} r={INNER_R} />
-            </clipPath>
-            <radialGradient id="ai-vignette" cx="50%" cy="50%" r="60%">
-              <stop offset="60%" stopColor="rgba(0,0,0,0)" />
-              <stop offset="100%" stopColor="rgba(0,0,0,0.35)" />
-            </radialGradient>
-          </defs>
-
-          <circle cx={0} cy={0} r={VIEW_R - 2} fill="var(--bg-soft)" stroke="var(--border-strong)" strokeWidth={2} />
-          <circle cx={0} cy={0} r={INNER_R + 4} fill="var(--bg-elev)" stroke="var(--border)" strokeWidth={0.6} />
-
-          <g clipPath="url(#ai-clip)">
-            <rect x={-200} y={-200} width={400} height={400} fill={GROUND} />
-            <g transform={`rotate(${rotateDeg}) translate(0 ${translateY})`}>
-              <rect x={-300} y={-400} width={600} height={400} fill={SKY} />
-              <rect x={-300} y={0} width={600} height={400} fill={GROUND} />
-              <line x1={-300} y1={0} x2={300} y2={0} stroke={HORIZON_LINE} strokeWidth={2} />
-
-              {pitchLadder.map((p) => {
-                const y = -p * PITCH_PX_PER_DEG;
-                const isMajor = Math.abs(p) % 10 === 0;
-                const len = isMajor ? 22 : 12;
-                return (
-                  <g key={p}>
-                    <line x1={-len} y1={y} x2={len} y2={y} stroke={HORIZON_LINE} strokeWidth={1.4} />
-                    {isMajor && (
-                      <>
-                        <text x={len + 3} y={y + 3.2} fontSize={8.5} fill={HORIZON_LINE} fontFamily="'JetBrains Mono', monospace" fontWeight={600}>{Math.abs(p)}</text>
-                        <text x={-len - 3} y={y + 3.2} fontSize={8.5} fill={HORIZON_LINE} fontFamily="'JetBrains Mono', monospace" fontWeight={600} textAnchor="end">{Math.abs(p)}</text>
-                      </>
-                    )}
-                  </g>
-                );
-              })}
-
-              <path
-                d={`M 0 ${-INNER_R + 6} L -5 ${-INNER_R + 14} L 5 ${-INNER_R + 14} Z`}
-                fill={SYMBOL}
-                stroke="rgba(0,0,0,0.4)"
-                strokeWidth={0.6}
-              />
-            </g>
-            <rect x={-200} y={-200} width={400} height={400} fill="url(#ai-vignette)" />
-          </g>
-
-          {bankMajor.map((b) => {
-            const a = (b * Math.PI) / 180;
-            const r1 = INNER_R + 2;
-            const r2 = INNER_R - 6;
-            return (
-              <line key={b} x1={r1 * Math.sin(a)} y1={-r1 * Math.cos(a)} x2={r2 * Math.sin(a)} y2={-r2 * Math.cos(a)} stroke={SCALE} strokeWidth={1.6} opacity={0.9} />
-            );
-          })}
-          {bankMinor.map((b) => {
-            const a = (b * Math.PI) / 180;
-            const r1 = INNER_R + 2;
-            const r2 = INNER_R - 3;
-            return (
-              <line key={b} x1={r1 * Math.sin(a)} y1={-r1 * Math.cos(a)} x2={r2 * Math.sin(a)} y2={-r2 * Math.cos(a)} stroke={SCALE} strokeWidth={1} opacity={0.7} />
-            );
-          })}
-          {[30, 60, -30, -60].map((b) => {
-            const a = (b * Math.PI) / 180;
-            const r = INNER_R - 14;
-            return (
-              <text key={b} x={r * Math.sin(a)} y={-r * Math.cos(a) + 3.2} fontSize={8} fill={SCALE} fontFamily="'JetBrains Mono', monospace" fontWeight={600} textAnchor="middle" opacity={0.9}>{Math.abs(b)}</text>
-            );
-          })}
-
-          <path d={`M 0 ${-INNER_R - 6} L -4.5 ${-INNER_R - 14} L 4.5 ${-INNER_R - 14} Z`} fill={SCALE} />
-
-          <g stroke={SYMBOL} fill="none" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-            <line x1={-30} y1={0} x2={-12} y2={0} />
-            <line x1={12} y1={0} x2={30} y2={0} />
-            <path d="M -8 0 L 0 5 L 8 0" />
-          </g>
-          <circle cx={0} cy={0} r={2.4} fill={SYMBOL} />
-        </svg>
-
-        <div className="mt-1.5 flex items-center gap-2 text-[10px] num text-fg-soft">
-          <span>θ <span className="text-fg font-bold">{(theta > 0 ? '+' : '') + theta.toFixed(1)}°</span></span>
-          <span>φ <span className="text-fg font-bold">{(bank > 0 ? '+' : '') + bank.toFixed(0)}°</span></span>
-          <button
-            type="button"
-            onClick={() => { setTheta(0); setBank(0); }}
-            className="btn-ghost btn text-[10px] py-0.5 px-1.5"
-            title="Level — zero pitch & bank"
+        <div className="relative">
+          <svg
+            ref={ref}
+            // ViewBox extended on bottom to fit bank-preset arc
+            viewBox={`-${VIEW_R + 30} -${VIEW_R + 8} ${(VIEW_R + 30) * 2} ${(VIEW_R + 8) + (VIEW_R + 38)}`}
+            width={size + 60}
+            height={size + 46}
+            onPointerDown={handlePointerDown}
+            className="touch-none cursor-grab active:cursor-grabbing block"
+            aria-label="Attitude indicator — drag to set pitch and bank"
+            role="slider"
+            aria-valuemin={-bankMax}
+            aria-valuemax={bankMax}
+            aria-valuenow={bank}
           >
-            ↺
-          </button>
+            <defs>
+              <clipPath id="ai-clip">
+                <circle cx={0} cy={0} r={INNER_R} />
+              </clipPath>
+              <radialGradient id="ai-vignette" cx="50%" cy="50%" r="60%">
+                <stop offset="55%" stopColor="rgba(0,0,0,0)" />
+                <stop offset="100%" stopColor="rgba(0,0,0,0.40)" />
+              </radialGradient>
+              {/* Drafting tick gradient for sky/ground halves */}
+              <linearGradient id="ai-sky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={SKY} />
+                <stop offset="100%" stopColor={SKY_LIGHT} />
+              </linearGradient>
+              <linearGradient id="ai-ground" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={GROUND_LIGHT} />
+                <stop offset="100%" stopColor={GROUND} />
+              </linearGradient>
+              <pattern id="bezel-hatch" patternUnits="userSpaceOnUse" width="3" height="3" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="3" stroke="var(--rule)" strokeWidth="0.4" opacity="0.4" />
+              </pattern>
+            </defs>
+
+            {/* Outer drafting bezel — paper coloured with hairline rules */}
+            <circle cx={0} cy={0} r={VIEW_R + 2} fill="var(--bg-soft)" stroke="var(--border-strong)" strokeWidth={1.4} />
+            <circle cx={0} cy={0} r={VIEW_R - 4} fill="url(#bezel-hatch)" opacity={0.45} />
+            <circle cx={0} cy={0} r={INNER_R + 4} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.7} />
+
+            {/* Inner AI face */}
+            <g clipPath="url(#ai-clip)">
+              <rect x={-200} y={-200} width={400} height={400} fill="url(#ai-ground)" />
+              <g transform={`rotate(${rotateDeg}) translate(0 ${translateY})`}>
+                <rect x={-300} y={-400} width={600} height={400} fill="url(#ai-sky)" />
+                <rect x={-300} y={0} width={600} height={400} fill="url(#ai-ground)" />
+                <line x1={-300} y1={0} x2={300} y2={0} stroke={HORIZON_LINE} strokeWidth={2} />
+
+                {pitchLadder.map((p) => {
+                  const y = -p * PITCH_PX_PER_DEG;
+                  const isMajor = Math.abs(p) % 10 === 0;
+                  const len = isMajor ? 24 : 12;
+                  return (
+                    <g key={p}>
+                      <line x1={-len} y1={y} x2={len} y2={y} stroke={HORIZON_LINE} strokeWidth={1.3} />
+                      {isMajor && (
+                        <>
+                          <text x={len + 4} y={y + 3.2} fontSize={9} fill={HORIZON_LINE} fontFamily="'JetBrains Mono', monospace" fontWeight={600}>{Math.abs(p)}</text>
+                          <text x={-len - 4} y={y + 3.2} fontSize={9} fill={HORIZON_LINE} fontFamily="'JetBrains Mono', monospace" fontWeight={600} textAnchor="end">{Math.abs(p)}</text>
+                        </>
+                      )}
+                    </g>
+                  );
+                })}
+
+                {/* Sky pointer (small triangle at top of pitch tape) */}
+                <path
+                  d={`M 0 ${-INNER_R + 6} L -5 ${-INNER_R + 14} L 5 ${-INNER_R + 14} Z`}
+                  fill={SYMBOL}
+                  stroke="rgba(0,0,0,0.4)"
+                  strokeWidth={0.6}
+                />
+              </g>
+              <rect x={-200} y={-200} width={400} height={400} fill="url(#ai-vignette)" />
+            </g>
+
+            {/* Bank scale on top half of bezel */}
+            {bankMajorMarks.map((b) => {
+              const a = (b * Math.PI) / 180;
+              const r1 = INNER_R + 2;
+              const r2 = INNER_R - 8;
+              return (
+                <line key={b} x1={r1 * Math.sin(a)} y1={-r1 * Math.cos(a)} x2={r2 * Math.sin(a)} y2={-r2 * Math.cos(a)} stroke={SCALE} strokeWidth={1.6} opacity={0.92} />
+              );
+            })}
+            {bankMinorMarks.map((b) => {
+              const a = (b * Math.PI) / 180;
+              const r1 = INNER_R + 2;
+              const r2 = INNER_R - 3;
+              return (
+                <line key={b} x1={r1 * Math.sin(a)} y1={-r1 * Math.cos(a)} x2={r2 * Math.sin(a)} y2={-r2 * Math.cos(a)} stroke={SCALE} strokeWidth={1} opacity={0.7} />
+              );
+            })}
+            {[30, 60, -30, -60].map((b) => {
+              const a = (b * Math.PI) / 180;
+              const r = INNER_R - 18;
+              return (
+                <text key={b} x={r * Math.sin(a)} y={-r * Math.cos(a) + 3.2} fontSize={8.5} fill={SCALE} fontFamily="'JetBrains Mono', monospace" fontWeight={600} textAnchor="middle" opacity={0.92}>{Math.abs(b)}</text>
+              );
+            })}
+
+            {/* Top bank pointer (drafting triangle) */}
+            <path d={`M 0 ${-INNER_R - 6} L -4.5 ${-INNER_R - 14} L 4.5 ${-INNER_R - 14} Z`} fill={SCALE} />
+
+            {/* Aircraft wing symbol — drafting orange */}
+            <g stroke={SYMBOL} fill="none" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+              <line x1={-30} y1={0} x2={-12} y2={0} />
+              <line x1={12} y1={0} x2={30} y2={0} />
+              <path d="M -8 0 L 0 5 L 8 0" />
+            </g>
+            <circle cx={0} cy={0} r={2.4} fill={SYMBOL} />
+
+            {/* ── Bezel bank preset buttons (bottom arc) ── */}
+            {BANK_PRESETS.map((b) => {
+              const a = (b * Math.PI) / 180;
+              // Place on BOTTOM arc — invert vertical sign
+              const x = bezelBankR * Math.sin(a);
+              const y = bezelBankR * Math.cos(a);  // +cos → below center
+              const xi = bezelBankInner * Math.sin(a);
+              const yi = bezelBankInner * Math.cos(a);
+              const isActive = Math.abs(bank - b) < 0.01;
+              return (
+                <g key={`bp-${b}`}>
+                  {/* Tick line into the bezel */}
+                  <line
+                    x1={xi}
+                    y1={yi}
+                    x2={x * 0.94}
+                    y2={y * 0.94}
+                    stroke={isActive ? 'var(--accent)' : 'var(--rule)'}
+                    strokeWidth={isActive ? 1.6 : 0.8}
+                    opacity={isActive ? 1 : 0.6}
+                  />
+                  {/* Clickable hit area — invisible larger circle for ergonomics */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={11}
+                    fill="transparent"
+                    style={{ cursor: 'pointer' }}
+                    onPointerDown={(ev) => { ev.stopPropagation(); setBank(b); }}
+                  />
+                  {/* Visible label */}
+                  <text
+                    x={x}
+                    y={y + 3.5}
+                    textAnchor="middle"
+                    fontSize={isActive ? 10 : 9}
+                    fill={isActive ? 'var(--accent)' : 'var(--text-soft)'}
+                    fontFamily="'JetBrains Mono', monospace"
+                    fontWeight={isActive ? 700 : 500}
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    {b === 0 ? '0' : (b > 0 ? `+${b}` : b) + '°'}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Bezel bank caption */}
+            <text
+              x={0}
+              y={VIEW_R + 32}
+              textAnchor="middle"
+              fontSize={7.5}
+              fill="var(--text-mute)"
+              fontFamily="'IBM Plex Sans Condensed', system-ui"
+              letterSpacing="0.22em"
+              fontWeight={600}
+            >
+              BANK φ — PRESETS · STEP {BANK_STEP}°
+            </text>
+          </svg>
+        </div>
+
+        {/* Compact 4-way nudge cross — below the AI */}
+        <div className="mt-2 flex flex-col items-center gap-1">
+          <div className="grid grid-cols-3 grid-rows-3 gap-0.5">
+            <span />
+            <button type="button" onClick={() => nudgePitch(-PITCH_STEP)}
+              className="btn px-2 py-0.5 text-xs"
+              title={`pitch −${PITCH_STEP}°`} aria-label="pitch down">▲</button>
+            <span />
+            <button type="button" onClick={() => nudgeBank(-BANK_STEP)}
+              className="btn px-2 py-0.5 text-xs"
+              title={`bank −${BANK_STEP}°`} aria-label="bank left">◀</button>
+            <button type="button" onClick={() => { setTheta(0); setBank(0); }}
+              className="btn-ghost btn px-2 py-0.5 text-[10px]"
+              title="centre" aria-label="centre">●</button>
+            <button type="button" onClick={() => nudgeBank(BANK_STEP)}
+              className="btn px-2 py-0.5 text-xs"
+              title={`bank +${BANK_STEP}°`} aria-label="bank right">▶</button>
+            <span />
+            <button type="button" onClick={() => nudgePitch(PITCH_STEP)}
+              className="btn px-2 py-0.5 text-xs"
+              title={`pitch +${PITCH_STEP}°`} aria-label="pitch up">▼</button>
+            <span />
+          </div>
+          <div className="flex items-baseline gap-3 text-[10px] num text-fg-soft mt-0.5">
+            <span>θ <span className="text-fg font-bold">{(theta > 0 ? '+' : '') + theta.toFixed(1)}°</span></span>
+            <span>φ <span className="text-fg font-bold">{(bank > 0 ? '+' : '') + bank.toFixed(0)}°</span></span>
+          </div>
         </div>
       </div>
 
-      {/* ── Right column: D-pad + presets ── */}
-      <div className="flex flex-col gap-2 min-w-0">
-        <div>
-          <div className="meta mb-1">Nudge</div>
-          <div className="grid grid-cols-3 grid-rows-3 gap-1 w-[96px]">
-            <span />
-            {/* Yoke convention: push forward (↑) = nose down */}
-            <button type="button" onClick={() => nudgePitch(-PITCH_STEP)} className="btn px-0 py-1 text-sm" title={`push — nose ↓ (pitch −${PITCH_STEP}°)`} aria-label="push: nose down">↑</button>
-            <span />
-            <button type="button" onClick={() => nudgeBank(-BANK_STEP)} className="btn px-0 py-1 text-sm" title={`bank −${BANK_STEP}°`} aria-label="bank left">←</button>
-            <button type="button" onClick={() => { setTheta(0); setBank(0); }} className="btn-ghost btn px-0 py-1 text-[10px]" title="centre" aria-label="centre">•</button>
-            <button type="button" onClick={() => nudgeBank(BANK_STEP)} className="btn px-0 py-1 text-sm" title={`bank +${BANK_STEP}°`} aria-label="bank right">→</button>
-            <span />
-            {/* Pull back (↓) = nose up */}
-            <button type="button" onClick={() => nudgePitch(PITCH_STEP)} className="btn px-0 py-1 text-sm" title={`pull — nose ↑ (pitch +${PITCH_STEP}°)`} aria-label="pull: nose up">↓</button>
-            <span />
-          </div>
+      {/* ── Pitch preset tape (vertical column to the right of the AI) ── */}
+      <div className="flex flex-col items-stretch min-w-[68px]">
+        <div className="meta mb-1 text-center" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
+          PITCH θ
         </div>
-
-        <div>
-          <div className="meta mb-1">Pitch preset</div>
-          <div className="flex gap-1 flex-wrap">
-            {PITCH_PRESETS.map((p) => (
+        <div className="flex flex-col gap-px border border-app">
+          {PITCH_PRESETS.map((p) => {
+            const isActive = Math.abs(theta - p) < 0.01;
+            return (
               <button
                 key={p}
                 type="button"
                 onClick={() => setTheta(p)}
-                className={`btn px-2 py-1 text-[11px] ${Math.abs(theta - p) < 0.01 ? 'is-active' : ''}`}
-                aria-pressed={Math.abs(theta - p) < 0.01}
+                className={`px-2 py-1 text-[11px] num text-left flex items-center gap-2 transition-colors ${
+                  isActive ? 'bg-[var(--text)] text-[var(--bg-elev)]' : 'bg-[var(--bg-elev)] hover:bg-[var(--bg-hover)] text-[var(--text)]'
+                }`}
+                aria-pressed={isActive}
               >
-                {p > 0 ? '+' : ''}{p}°
+                <span
+                  className="inline-block w-1 h-3"
+                  style={{ background: isActive ? 'var(--accent)' : (p === 0 ? 'var(--rule)' : 'transparent') }}
+                />
+                <span className="font-bold tabular-nums">
+                  {p > 0 ? '+' : (p < 0 ? '' : ' ')}
+                  {p}°
+                </span>
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
-
-        <div>
-          <div className="meta mb-1">Bank preset</div>
-          <div className="flex gap-1 flex-wrap">
-            {BANK_PRESETS.map((b) => (
-              <button
-                key={b}
-                type="button"
-                onClick={() => setBank(b)}
-                className={`btn px-2 py-1 text-[11px] ${Math.abs(bank - b) < 0.01 ? 'is-active' : ''}`}
-                aria-pressed={Math.abs(bank - b) < 0.01}
-              >
-                {b}°
-              </button>
-            ))}
-          </div>
+        <div className="text-[9px] text-fg-mute mt-1 text-center" style={{ letterSpacing: '0.1em' }}>
+          STEP {PITCH_STEP}°
         </div>
       </div>
     </div>

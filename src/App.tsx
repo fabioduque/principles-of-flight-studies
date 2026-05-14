@@ -100,19 +100,28 @@ export default function App() {
   return (
     <div className="min-h-screen bg-app text-fg">
       {/* Body content — reserve space at bottom for sticky control bar */}
-      <div className="max-w-[1600px] mx-auto px-3 sm:px-5 py-3 pb-[220px]">
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-5 py-3 pb-[280px]">
 
-        {/* ─── Header ─── */}
-        <header className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-app">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-base font-bold tracking-tight">
-              C152 <span className="text-accent">aero</span>
-            </h1>
-            <span className="meta hidden sm:inline">Lift · drag · load factor</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="meta hidden lg:inline">Sea level ISA</span>
-            <div className="flex gap-1">
+        {/* ─── Header — drafting frontispiece ─── */}
+        <header className="mb-4 pb-3 border-b border-app">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="flex items-baseline gap-4">
+              <div>
+                <div className="meta" style={{ fontSize: 9, letterSpacing: '0.28em' }}>
+                  PRINCIPLES OF FLIGHT · STUDY SUPPLEMENT
+                </div>
+                <h1 className="font-display italic text-2xl sm:text-3xl mt-0.5 leading-none" style={{ fontVariationSettings: "'SOFT' 30, 'WONK' 1, 'opsz' 144" }}>
+                  Cessna <span className="text-accent">152</span>
+                  <span className="text-fg-mute font-normal not-italic mx-2">·</span>
+                  <span className="font-normal not-italic text-fg-soft text-xl">Aerodynamics</span>
+                </h1>
+              </div>
+              <span className="stamp hidden sm:inline-flex">
+                <span className="stamp-num">SL · ISA</span>
+                <span>1670 lb · normal cat.</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
               {(['auto', 'light', 'dark'] as Theme[]).map((t) => (
                 <button
                   key={t}
@@ -131,14 +140,14 @@ export default function App() {
         {/* ═══ TOP: charts row ═══ */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 mb-3">
           <Card
-            title="Lift coefficient · Cₗ vs α"
+            title="Fig 2 — Lift coefficient Cₗ vs α"
             aside={`α ${state.alpha.toFixed(1)}° · Cₗ ${state.CL.toFixed(2)}`}
           >
             <CLChart activeFlaps={flaps} alpha={state.alpha} CL={state.CL} showAllFlapCurves />
           </Card>
 
           <Card
-            title="Drag curves · D vs V (level trim)"
+            title="Fig 3 — Drag curves D vs V"
             aside={`D ${Math.round(state.D)} N at ${state.V_kts.toFixed(0)} kt`}
           >
             <DragChart flaps={flaps} V_kts={state.V_kts} />
@@ -148,10 +157,10 @@ export default function App() {
         {/* ═══ MIDDLE: aircraft views ═══ */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 mb-3">
           <Card
-            title="Side view — four forces"
-            aside={`θ ${theta >= 0 ? '+' : ''}${theta.toFixed(1)}° · ${flaps === 0 ? 'clean' : `flaps ${flaps}°`}`}
+            title="Fig 1·A — Side profile"
+            aside={`θ ${theta >= 0 ? '+' : ''}${theta.toFixed(1)}° · ${flaps === 0 ? 'CLEAN' : `FLAPS ${flaps}°`}`}
           >
-            <div className="grid-bg aspect-[16/10] xl:aspect-auto xl:h-[300px]">
+            <div className="horizon-bg aspect-[16/10] xl:aspect-auto xl:h-[320px]">
               <FlightDiagram state={state} />
             </div>
             <div className="px-3 py-1.5 text-[10px] border-t border-app flex flex-wrap gap-x-3 gap-y-1 num text-fg-soft">
@@ -163,11 +172,17 @@ export default function App() {
           </Card>
 
           <Card
-            title="Back view — bank &amp; load"
-            aside={`φ ${bank.toFixed(0)}° · n ${state.n.toFixed(2)}g`}
+            title="Fig 1·B — Aft view"
+            aside={`φ ${bank.toFixed(0)}° · n ${state.n.toFixed(2)} g`}
           >
-            <div className="grid-bg aspect-[16/10] xl:aspect-auto xl:h-[300px]">
+            <div className="horizon-bg aspect-[16/10] xl:aspect-auto xl:h-[320px]">
               <BankView state={state} />
+            </div>
+            <div className="px-3 py-1.5 text-[10px] border-t border-app flex flex-wrap gap-x-3 gap-y-1 num text-fg-soft">
+              <span className="inline-flex items-center gap-1.5"><span className="inline-block w-2.5 h-0.5" style={{ background: 'var(--c-lift)' }} />L tilts with wings</span>
+              <span className="inline-flex items-center gap-1.5"><span className="inline-block w-2.5 h-0.5" style={{ background: 'var(--c-weight)' }} />W stays vertical</span>
+              <span className="inline-flex items-center gap-1.5"><span className="inline-block w-2.5 h-0.5" style={{ background: 'var(--c-magenta)' }} />L cos φ, L sin φ</span>
+              <span className="inline-flex items-center gap-1.5"><span className="inline-block w-2.5 h-0.5" style={{ background: 'var(--accent)' }} />turn direction</span>
             </div>
           </Card>
         </div>
@@ -214,21 +229,36 @@ export default function App() {
         </div>
       </div>
 
-      {/* ═══ BOTTOM: sticky control bar ═══ */}
+      {/* ═══ BOTTOM: sticky control bar — drafting "instrument panel" ═══ */}
       <div
-        className="fixed inset-x-0 bottom-0 z-40 border-t backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-40"
         style={{
-          background: 'color-mix(in srgb, var(--bg-elev) 92%, transparent)',
-          borderColor: 'var(--border)',
-          boxShadow: 'var(--shadow)',
+          background: 'var(--bg-elev)',
+          borderTop: '1px solid var(--border-strong)',
+          boxShadow: '0 -2px 0 var(--rule), 0 -10px 24px -8px rgba(0,0,0,0.15)',
         }}
       >
-        <div className="max-w-[1600px] mx-auto px-3 sm:px-5 py-3">
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+        {/* Title strip — like a drafting cartouche */}
+        <div
+          className="border-b border-app px-4 py-1 flex items-center justify-between"
+          style={{ background: 'var(--bg-soft)' }}
+        >
+          <span className="meta" style={{ fontSize: 8.5, letterSpacing: '0.24em' }}>
+            CONSOLE · PILOT INPUTS
+          </span>
+          <span className="meta" style={{ fontSize: 8.5, letterSpacing: '0.18em' }}>
+            STEP θ {2.5}° · φ {5}° · T {10} N
+          </span>
+        </div>
 
-            {/* 2D pitch/bank joystick */}
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-5 py-3">
+          <div className="flex flex-wrap items-start gap-5 lg:gap-6">
+
+            {/* Attitude indicator (with bank presets + pitch tape) */}
             <div className="flex flex-col items-center">
-              <span className="meta mb-1.5">Yoke · pitch &amp; bank</span>
+              <span className="meta mb-1.5" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
+                ATTITUDE
+              </span>
               <AttitudeControl
                 theta={theta}
                 bank={bank}
@@ -237,9 +267,11 @@ export default function App() {
               />
             </div>
 
-            {/* Throttle (vertical slider) */}
+            {/* Throttle */}
             <div className="flex flex-col items-center">
-              <span className="meta mb-1.5">Throttle</span>
+              <span className="meta mb-1.5" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
+                THROTTLE
+              </span>
               <div className="flex items-center gap-3">
                 <input
                   type="range"
@@ -256,26 +288,28 @@ export default function App() {
                     width: 24,
                   }}
                 />
-                <div className="text-center min-w-[56px]">
-                  <div className="num text-2xl font-bold" style={{ color: 'var(--c-thrust)' }}>
+                <div className="text-center min-w-[64px] border border-app p-1.5 bg-app">
+                  <div className="display-num text-3xl" style={{ color: 'var(--c-thrust)' }}>
                     {throttlePct}
                   </div>
-                  <div className="text-[10px] text-fg-mute">%</div>
+                  <div className="meta" style={{ fontSize: 7.5 }}>PERCENT</div>
                   <div className="num text-[10px] text-fg-soft mt-1">{Math.round(thrust)} N</div>
                 </div>
               </div>
             </div>
 
-            {/* Flaps (vertical buttons) */}
+            {/* Flaps */}
             <div className="flex flex-col items-center">
-              <span className="meta mb-1.5">Flaps</span>
-              <div className="flex flex-col gap-1 h-[168px]">
+              <span className="meta mb-1.5" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
+                FLAPS
+              </span>
+              <div className="flex flex-col gap-px h-[168px] border border-app">
                 {[...FLAP_SETTINGS].reverse().map((f) => (
                   <button
                     key={f}
                     type="button"
                     onClick={() => setFlaps(f)}
-                    className={`btn flex-1 min-w-[60px] ${f === flaps ? 'is-active' : ''}`}
+                    className={`btn flex-1 min-w-[60px] !border-0 ${f === flaps ? 'is-active' : ''}`}
                     aria-pressed={f === flaps}
                   >
                     {f}°
@@ -285,28 +319,30 @@ export default function App() {
             </div>
 
             {/* Live readout snapshot */}
-            <div className="flex items-stretch divide-x divide-[var(--border)] border border-app rounded-lg overflow-hidden ml-auto bg-elev">
+            <div className="flex items-stretch border border-app divide-x divide-[var(--border)] ml-auto bg-app">
+              <div className="px-3 py-2 text-center min-w-[72px]">
+                <div className="meta" style={{ fontSize: 8 }}>IAS</div>
+                <div className="display-num text-xl mt-0.5">{state.V_kts.toFixed(0)}</div>
+                <div className="text-[9px] text-fg-mute mt-0.5">kt</div>
+              </div>
               <div className="px-3 py-2 text-center min-w-[68px]">
-                <div className="meta">IAS</div>
-                <div className="num text-base font-bold">{state.V_kts.toFixed(0)}<span className="text-[10px] text-fg-mute ml-0.5">kt</span></div>
+                <div className="meta" style={{ fontSize: 8 }}>α</div>
+                <div className="display-num text-xl mt-0.5">{state.alpha.toFixed(1)}°</div>
+              </div>
+              <div className="px-3 py-2 text-center min-w-[68px]">
+                <div className="meta" style={{ fontSize: 8 }}>γ</div>
+                <div className="display-num text-xl mt-0.5">{state.gamma.toFixed(1)}°</div>
               </div>
               <div className="px-3 py-2 text-center min-w-[60px]">
-                <div className="meta">α</div>
-                <div className="num text-base font-bold">{state.alpha.toFixed(1)}°</div>
-              </div>
-              <div className="px-3 py-2 text-center min-w-[60px]">
-                <div className="meta">γ</div>
-                <div className="num text-base font-bold">{state.gamma.toFixed(1)}°</div>
-              </div>
-              <div className="px-3 py-2 text-center min-w-[56px]">
-                <div className="meta">n</div>
-                <div className="num text-base font-bold" style={{ color: state.n > 1.5 ? 'var(--c-drag)' : 'var(--text)' }}>
+                <div className="meta" style={{ fontSize: 8 }}>n</div>
+                <div className="display-num text-xl mt-0.5" style={{ color: state.n > 1.5 ? 'var(--c-drag)' : 'var(--text)' }}>
                   {state.n.toFixed(2)}
                 </div>
               </div>
-              <div className={`px-3 py-2 text-center min-w-[88px] ${state.status === 'stalled' ? 'bg-[color-mix(in_srgb,var(--c-weight)_18%,transparent)]' : ''}`}>
-                <div className="meta">Status</div>
-                <div className="text-xs font-bold uppercase tracking-wide" style={{
+              <div className={`px-3 py-2 text-center min-w-[96px] ${state.status === 'stalled' ? '' : ''}`} style={{ background: state.status === 'stalled' ? 'color-mix(in srgb, var(--c-weight) 22%, transparent)' : 'transparent' }}>
+                <div className="meta" style={{ fontSize: 8 }}>STATUS</div>
+                <div className="text-[11px] font-bold uppercase tracking-widest mt-1.5" style={{
+                  fontFamily: "'IBM Plex Sans Condensed', system-ui",
                   color: state.status === 'stalled' ? 'var(--c-weight)' :
                          state.status === 'near-stall' || state.status === 'pull-up' || state.status === 'unloaded' ? 'var(--c-drag)' :
                          state.status === 'climbing' ? 'var(--c-thrust)' :
@@ -319,19 +355,26 @@ export default function App() {
               </div>
             </div>
 
-            {/* Presets + reset */}
-            <div className="flex flex-col items-end gap-2 ml-auto sm:ml-0">
-              <span className="meta">Presets</span>
-              <div className="flex flex-wrap gap-1 max-w-[260px] justify-end">
+            {/* Scenario presets + reset */}
+            <div className="flex flex-col items-stretch gap-1.5 min-w-[200px]">
+              <span className="meta" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
+                SCENARIO
+              </span>
+              <div className="flex flex-wrap gap-px border border-app">
                 {PRESETS.map((p) => (
-                  <button key={p.name} type="button" onClick={() => applyPreset(p.name)} className="btn text-xs">
+                  <button
+                    key={p.name}
+                    type="button"
+                    onClick={() => applyPreset(p.name)}
+                    className="btn !border-0 flex-1 min-w-[88px] text-[10px] px-2"
+                  >
                     {p.name}
                   </button>
                 ))}
-                <button type="button" onClick={resetToDefaults} className="btn-ghost btn text-xs">
-                  ↺
-                </button>
               </div>
+              <button type="button" onClick={resetToDefaults} className="btn-ghost btn text-[10px] self-end">
+                ↺ reset
+              </button>
             </div>
           </div>
         </div>

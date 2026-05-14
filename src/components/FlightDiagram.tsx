@@ -7,19 +7,11 @@ interface Props {
   state: FlightState;
 }
 
-// Force magnitude → pixel length scaling.
-//
-// We use square-root scaling so that:
-//   - small forces (cruise thrust ~700 N) are still readable as short arrows;
-//   - the lift arrow grows visibly from trim (n=1) all the way to CL_max
-//     without saturating, and then shrinks again past stall.
-// Reference: weight (W = 7428 N) → 90 px. At V=95 kt, CL_max ≈ 1.5 gives
-// L ≈ 4.4·W → arrow ≈ 189 px. A hard cap of 220 px protects against extreme
-// V × CL_max combinations (e.g. V=130 kt at α=16°) without affecting the
-// normal exploration range at typical airspeeds.
+// Force magnitude → pixel length scaling (sqrt scale keeps small forces visible
+// and prevents large forces from saturating).
 const REF_ARROW_PX = 90;
 const MAX_ARROW_PX = 220;
-const LABEL_MIN_DIST = 145;
+const LABEL_MIN_DIST = 150;
 
 const rad = (deg: number) => (deg * Math.PI) / 180;
 
@@ -34,17 +26,13 @@ function scaleForce(magnitudeN: number, dir: Vec): Vec {
   return { x: dir.x * lengthPx, y: dir.y * lengthPx };
 }
 
-// Place a label at LABEL_MIN_DIST along the arrow direction, plus an optional
-// perpendicular offset (in px, measured CW from the arrow direction in screen).
-// If the arrow tip is already past LABEL_MIN_DIST, the label sits a bit past it.
 function labelPosition(end: Vec, perp: number): Vec {
   const len = Math.hypot(end.x, end.y) || 1;
   const ux = end.x / len;
   const uy = end.y / len;
-  // CW perpendicular unit (screen): (-uy, ux) rotated... we'll use (uy, -ux)
   const px = uy;
   const py = -ux;
-  const along = Math.max(len + 22, LABEL_MIN_DIST);
+  const along = Math.max(len + 26, LABEL_MIN_DIST);
   return { x: along * ux + perp * px, y: along * uy + perp * py };
 }
 
@@ -68,52 +56,56 @@ function ForceArrow({ end, labelAt, color, label, value, ariaLabel }: ForceArrow
         animate={{ x2: end.x, y2: end.y }}
         transition={{ type: 'spring', stiffness: 220, damping: 26 }}
         stroke={color}
-        strokeWidth={2.6}
+        strokeWidth={2.4}
         strokeLinecap="round"
         markerEnd={`url(#arrow-${label})`}
       />
-      {/* dashed leader line from arrow tip to the label */}
+      {/* drafting leader line — extends from arrow tip with a small "elbow" */}
       <motion.line
         initial={false}
         animate={{ x1: end.x, y1: end.y, x2: labelAt.x, y2: labelAt.y }}
         transition={{ type: 'spring', stiffness: 220, damping: 26 }}
         stroke={color}
-        strokeWidth={0.8}
-        strokeDasharray="2 3"
-        opacity={0.55}
+        strokeWidth={0.7}
+        strokeDasharray="1 2"
+        opacity={0.7}
       />
-      {/* label pill */}
+      {/* drafting-style label tag — hairline border, paper-coloured fill */}
       <motion.g
         initial={false}
         animate={{ x: labelAt.x, y: labelAt.y }}
         transition={{ type: 'spring', stiffness: 220, damping: 26 }}
       >
         <rect
-          x={-26}
-          y={-14}
-          width={78}
-          height={28}
+          x={-28}
+          y={-15}
+          width={86}
+          height={30}
           rx={0}
           fill="var(--bg-elev)"
           stroke={color}
-          strokeWidth={1.2}
+          strokeWidth={0.9}
         />
+        {/* corner tick to mimic a drafting tag */}
+        <line x1={-28} y1={-15} x2={-23} y2={-15} stroke={color} strokeWidth={1.6} />
+        <line x1={-28} y1={-15} x2={-28} y2={-10} stroke={color} strokeWidth={1.6} />
         <text
-          x={-21}
+          x={-22}
           y={-3}
           fill={color}
-          fontSize={12}
+          fontSize={11.5}
           fontWeight={700}
-          fontFamily="ui-sans-serif, system-ui"
+          fontFamily="'Fraunces', Georgia, serif"
+          fontStyle="italic"
         >
           {label}
         </text>
         <text
-          x={-21}
-          y={9}
+          x={-22}
+          y={10}
           fill={color}
-          fontSize={10}
-          fontFamily="ui-monospace, monospace"
+          fontSize={9.5}
+          fontFamily="'JetBrains Mono', monospace"
         >
           {value}
         </text>
@@ -122,12 +114,11 @@ function ForceArrow({ end, labelAt, color, label, value, ariaLabel }: ForceArrow
   );
 }
 
-// Punchy palette pulled from the page's CSS variables.
 const COLOR_LIFT = 'var(--c-lift)';
 const COLOR_WEIGHT = 'var(--c-weight)';
 const COLOR_THRUST = 'var(--c-thrust)';
 const COLOR_DRAG = 'var(--c-drag)';
-const COLOR_HORIZON = 'var(--text-mute)';
+const COLOR_HORIZON = 'var(--rule)';
 const COLOR_FLIGHTPATH = 'var(--c-magenta)';
 const COLOR_CHORD = 'var(--text-soft)';
 const COLOR_CG = 'var(--c-cg)';
@@ -135,27 +126,10 @@ const COLOR_CG = 'var(--c-cg)';
 export function FlightDiagram({ state }: Props) {
   const { alpha, theta, gamma, L, D, thrust, V_kts } = state;
 
-  // Body axis (thrust direction) in screen coords
-  const bodyDir: Vec = {
-    x: Math.cos(rad(theta)),
-    y: -Math.sin(rad(theta)),
-  };
-  // Flight path direction
-  const fpDir: Vec = {
-    x: Math.cos(rad(gamma)),
-    y: -Math.sin(rad(gamma)),
-  };
-  // Lift direction (perpendicular to flight path, on upper-wing side)
-  const liftDir: Vec = {
-    x: -Math.sin(rad(gamma)),
-    y: -Math.cos(rad(gamma)),
-  };
-  // Drag direction (opposite to flight path)
-  const dragDir: Vec = {
-    x: -Math.cos(rad(gamma)),
-    y: Math.sin(rad(gamma)),
-  };
-  // Weight direction (straight down in screen)
+  const bodyDir: Vec = { x: Math.cos(rad(theta)), y: -Math.sin(rad(theta)) };
+  const fpDir: Vec = { x: Math.cos(rad(gamma)), y: -Math.sin(rad(gamma)) };
+  const liftDir: Vec = { x: -Math.sin(rad(gamma)), y: -Math.cos(rad(gamma)) };
+  const dragDir: Vec = { x: -Math.cos(rad(gamma)), y: Math.sin(rad(gamma)) };
   const weightDir: Vec = { x: 0, y: 1 };
 
   const liftEnd = scaleForce(L, liftDir);
@@ -163,30 +137,23 @@ export function FlightDiagram({ state }: Props) {
   const thrustEnd = scaleForce(thrust, bodyDir);
   const dragEnd = scaleForce(D, dragDir);
 
-  // Angle arc helper. Draws a small arc between two angles at given radius.
-  // Angles are SVG-screen angles (positive = CW from +X in SVG since Y is down).
-  // We pass body and flight-path angles in DEGREES measured the natural way
-  // (positive pitch = nose-up, positive γ = climbing). In SVG screen, these
-  // map to negative angles around origin.
-  const arcRadius = (r: number, angle1: number, angle2: number) => {
-    const a1 = -angle1; // convert pitch-up to SVG angle
+  const arcPath = (r: number, angle1: number, angle2: number) => {
+    const a1 = -angle1;
     const a2 = -angle2;
     const x1 = r * Math.cos(rad(a1));
     const y1 = r * Math.sin(rad(a1));
     const x2 = r * Math.cos(rad(a2));
     const y2 = r * Math.sin(rad(a2));
-    // Sweep direction: we draw from a1 to a2.
-    // sweep-flag 1 = CW in SVG (increasing angle)
     const sweep = a2 > a1 ? 1 : 0;
     return `M ${x1} ${y1} A ${r} ${r} 0 0 ${sweep} ${x2} ${y2}`;
   };
 
   return (
     <svg
-      viewBox="-360 -250 720 420"
+      viewBox="-380 -250 760 420"
       className="w-full h-full"
       role="img"
-      aria-label={`Cessna flight diagram. Pitch ${theta.toFixed(1)} degrees, AoA ${alpha.toFixed(1)} degrees, flight path angle ${gamma.toFixed(1)} degrees, airspeed ${V_kts.toFixed(0)} knots.`}
+      aria-label={`Cessna 152 side view. Pitch ${theta.toFixed(1)} degrees, AoA ${alpha.toFixed(1)} degrees, flight path ${gamma.toFixed(1)} degrees, airspeed ${V_kts.toFixed(0)} knots.`}
     >
       <defs>
         {(
@@ -210,115 +177,108 @@ export function FlightDiagram({ state }: Props) {
             <path d="M 0 0 L 10 5 L 0 10 Z" fill={colour} />
           </marker>
         ))}
+        {/* Drafting hatching for "ground" below horizon */}
+        <pattern id="ground-hatch" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+          <line x1={0} y1={0} x2={0} y2={8} stroke="var(--rule)" strokeWidth={0.4} opacity={0.35} />
+        </pattern>
       </defs>
 
-      {/* horizon (dashed, always horizontal) */}
-      <line
-        x1={-320}
-        y1={0}
-        x2={320}
-        y2={0}
-        stroke={COLOR_HORIZON}
-        strokeWidth={0.9}
-        strokeDasharray="6 6"
-      />
+      {/* ── Earth band below horizon (very subtle, drafting hatch) ── */}
+      <rect x={-380} y={0} width={760} height={170} fill="url(#ground-hatch)" opacity={0.55} />
+
+      {/* ── Horizon (drafting datum line) ── */}
+      <line x1={-340} y1={0} x2={340} y2={0} stroke={COLOR_HORIZON} strokeWidth={0.9} strokeDasharray="6 4" />
+      {/* small cardinal ticks along the horizon */}
+      {[-280, -200, -120, -40, 40, 120, 200, 280].map((x) => (
+        <line key={x} x1={x} y1={-3} x2={x} y2={3} stroke={COLOR_HORIZON} strokeWidth={0.6} opacity={0.7} />
+      ))}
       <text
-        x={310}
-        y={-6}
+        x={332}
+        y={-7}
         fill={COLOR_HORIZON}
-        fontSize={10}
+        fontSize={9}
         textAnchor="end"
-        fontFamily="ui-sans-serif, system-ui"
+        fontFamily="'IBM Plex Sans Condensed', system-ui"
+        letterSpacing="0.14em"
+        fontWeight={600}
       >
-        horizon
+        HORIZON
       </text>
 
-      {/* flight path (dashed, through CG at angle γ) */}
+      {/* ── Flight path (through CG at angle γ) ── */}
       <line
-        x1={-fpDir.x * 300}
-        y1={-fpDir.y * 300}
-        x2={fpDir.x * 300}
-        y2={fpDir.y * 300}
+        x1={-fpDir.x * 320}
+        y1={-fpDir.y * 320}
+        x2={fpDir.x * 320}
+        y2={fpDir.y * 320}
         stroke={COLOR_FLIGHTPATH}
         strokeWidth={0.9}
-        strokeDasharray="4 4"
-        opacity={0.85}
+        strokeDasharray="5 3"
+        opacity={0.8}
       />
       <text
-        x={fpDir.x * 285}
-        y={fpDir.y * 285 - 6}
+        x={fpDir.x * 305}
+        y={fpDir.y * 305 - 6}
         fill={COLOR_FLIGHTPATH}
-        fontSize={10}
-        fontFamily="ui-sans-serif, system-ui"
+        fontSize={9}
+        fontFamily="'IBM Plex Sans Condensed', system-ui"
+        letterSpacing="0.1em"
+        fontWeight={600}
         textAnchor="end"
       >
-        flight path
+        FLIGHT PATH
       </text>
 
-      {/* chord line (subtle, along body axis through CG) */}
+      {/* ── Chord/body axis (subtle, drafting construction line) ── */}
       <line
         x1={-bodyDir.x * 180}
         y1={-bodyDir.y * 180}
         x2={bodyDir.x * 180}
         y2={bodyDir.y * 180}
         stroke={COLOR_CHORD}
-        strokeWidth={0.7}
-        strokeDasharray="2 4"
-        opacity={0.65}
+        strokeWidth={0.6}
+        strokeDasharray="1 3"
+        opacity={0.5}
       />
 
-      {/* angle arcs */}
-      <path
-        d={arcRadius(48, 0, theta)}
-        fill="none"
-        stroke={COLOR_CHORD}
-        strokeWidth={1}
-      />
+      {/* ── Angle arcs (drafting style — hairline) ── */}
+      <path d={arcPath(52, 0, theta)} fill="none" stroke={COLOR_CHORD} strokeWidth={0.9} />
       <text
-        x={56 * Math.cos(rad(-theta / 2))}
-        y={56 * Math.sin(rad(-theta / 2)) + 3}
+        x={62 * Math.cos(rad(-theta / 2))}
+        y={62 * Math.sin(rad(-theta / 2)) + 3}
         fill={COLOR_CHORD}
         fontSize={10}
-        fontFamily="ui-sans-serif, system-ui"
+        fontFamily="'Fraunces', Georgia, serif"
+        fontStyle="italic"
       >
-        θ {theta >= 0 ? '+' : ''}
-        {theta.toFixed(1)}°
+        θ {theta >= 0 ? '+' : ''}{theta.toFixed(1)}°
       </text>
 
-      <path
-        d={arcRadius(74, 0, gamma)}
-        fill="none"
-        stroke={COLOR_FLIGHTPATH}
-        strokeWidth={1}
-      />
+      <path d={arcPath(78, 0, gamma)} fill="none" stroke={COLOR_FLIGHTPATH} strokeWidth={0.9} />
       <text
-        x={84 * Math.cos(rad(-gamma / 2))}
-        y={84 * Math.sin(rad(-gamma / 2)) + 3}
+        x={88 * Math.cos(rad(-gamma / 2))}
+        y={88 * Math.sin(rad(-gamma / 2)) + 3}
         fill={COLOR_FLIGHTPATH}
         fontSize={10}
-        fontFamily="ui-sans-serif, system-ui"
+        fontFamily="'Fraunces', Georgia, serif"
+        fontStyle="italic"
       >
-        γ {gamma >= 0 ? '+' : ''}
-        {gamma.toFixed(1)}°
+        γ {gamma >= 0 ? '+' : ''}{gamma.toFixed(1)}°
       </text>
 
-      <path
-        d={arcRadius(28, gamma, theta)}
-        fill="none"
-        stroke={COLOR_LIFT}
-        strokeWidth={1}
-      />
+      <path d={arcPath(30, gamma, theta)} fill="none" stroke={COLOR_LIFT} strokeWidth={0.9} />
       <text
-        x={36 * Math.cos(rad(-(theta + gamma) / 2))}
-        y={36 * Math.sin(rad(-(theta + gamma) / 2)) + 3}
+        x={38 * Math.cos(rad(-(theta + gamma) / 2))}
+        y={38 * Math.sin(rad(-(theta + gamma) / 2)) + 3}
         fill={COLOR_LIFT}
         fontSize={10}
-        fontFamily="ui-sans-serif, system-ui"
+        fontFamily="'Fraunces', Georgia, serif"
+        fontStyle="italic"
       >
         α {alpha.toFixed(1)}°
       </text>
 
-      {/* the aircraft rotates around CG (SVG origin) by -θ */}
+      {/* ── Aircraft (rotates with θ around CG) ── */}
       <motion.g
         initial={false}
         animate={{ rotate: -theta }}
@@ -332,115 +292,20 @@ export function FlightDiagram({ state }: Props) {
         <AircraftSilhouette />
       </motion.g>
 
-      {/* Lift decomposition — projects the lift vector onto horizontal (Lₓ) and
-          vertical (Lᵧ) axes so students can see how much of the lift is fighting
-          gravity (Lᵧ) vs how much is pulling the airplane back along the flight
-          path (Lₓ, when γ ≠ 0). Drawn below the main arrows. */}
-      <g>
-        {/* horizontal (Lₓ) projection */}
-        <line
-          x1={0}
-          y1={0}
-          x2={liftEnd.x}
-          y2={0}
-          stroke={COLOR_LIFT}
-          strokeWidth={1.4}
-          strokeDasharray="4 3"
-          opacity={0.55}
-        />
-        {/* vertical (Lᵧ) projection */}
-        <line
-          x1={0}
-          y1={0}
-          x2={0}
-          y2={liftEnd.y}
-          stroke={COLOR_LIFT}
-          strokeWidth={1.4}
-          strokeDasharray="4 3"
-          opacity={0.55}
-        />
-        {/* dashed corner lines completing the rectangle */}
-        <line
-          x1={liftEnd.x}
-          y1={0}
-          x2={liftEnd.x}
-          y2={liftEnd.y}
-          stroke={COLOR_LIFT}
-          strokeWidth={0.8}
-          strokeDasharray="2 3"
-          opacity={0.35}
-        />
-        <line
-          x1={0}
-          y1={liftEnd.y}
-          x2={liftEnd.x}
-          y2={liftEnd.y}
-          stroke={COLOR_LIFT}
-          strokeWidth={0.8}
-          strokeDasharray="2 3"
-          opacity={0.35}
-        />
-
-        {/* Lᵧ label — vertical lift (gravity-fighting component) */}
-        <g transform={`translate(${liftEnd.x < 0 ? -8 : 8}, ${liftEnd.y / 2 + 4})`}>
-          <rect
-            x={liftEnd.x < 0 ? -78 : 0}
-            y={-9}
-            width={78}
-            height={18}
-            rx={2}
-            fill="var(--bg-elev)"
-            stroke={COLOR_LIFT}
-            strokeWidth={0.7}
-            opacity={0.92}
-          />
-          <text
-            x={liftEnd.x < 0 ? -74 : 4}
-            y={4}
-            fill={COLOR_LIFT}
-            fontSize={10}
-            fontFamily="'JetBrains Mono', monospace"
-            fontWeight={600}
-          >
-            Lᵧ = {Math.round(L * Math.cos((gamma * Math.PI) / 180)).toLocaleString()} N
-          </text>
-        </g>
-
-        {/* Lₓ label — horizontal lift (only shown when γ ≠ 0 so it's meaningful) */}
-        {Math.abs(gamma) > 0.4 && (
-          <g transform={`translate(${liftEnd.x / 2}, ${liftEnd.y > 0 ? -10 : 18})`}>
-            <rect
-              x={-46}
-              y={-9}
-              width={92}
-              height={18}
-              rx={2}
-              fill="var(--bg-elev)"
-              stroke={COLOR_LIFT}
-              strokeWidth={0.7}
-              opacity={0.92}
-            />
-            <text
-              x={0}
-              y={4}
-              fill={COLOR_LIFT}
-              fontSize={10}
-              textAnchor="middle"
-              fontFamily="'JetBrains Mono', monospace"
-              fontWeight={600}
-            >
-              Lₓ = {(L * Math.sin((gamma * Math.PI) / 180) > 0 ? '+' : '') +
-                Math.round(L * Math.sin((gamma * Math.PI) / 180)).toLocaleString()} N
-            </text>
-          </g>
-        )}
+      {/* ── Lift decomposition (Lₓ, Lᵧ) — drawn faint behind force arrows ── */}
+      <g opacity={0.6}>
+        <line x1={0} y1={0} x2={liftEnd.x} y2={0} stroke={COLOR_LIFT} strokeWidth={1} strokeDasharray="3 2" opacity={0.5} />
+        <line x1={0} y1={0} x2={0} y2={liftEnd.y} stroke={COLOR_LIFT} strokeWidth={1} strokeDasharray="3 2" opacity={0.5} />
+        <line x1={liftEnd.x} y1={0} x2={liftEnd.x} y2={liftEnd.y} stroke={COLOR_LIFT} strokeWidth={0.6} strokeDasharray="1 3" opacity={0.4} />
+        <line x1={0} y1={liftEnd.y} x2={liftEnd.x} y2={liftEnd.y} stroke={COLOR_LIFT} strokeWidth={0.6} strokeDasharray="1 3" opacity={0.4} />
       </g>
 
-      {/* CG marker (small ring) */}
-      <circle cx={0} cy={0} r={4.2} fill="none" stroke={COLOR_CG} strokeWidth={1.4} />
-      <circle cx={0} cy={0} r={1.5} fill={COLOR_CG} />
+      {/* ── CG marker (drafting target) ── */}
+      <circle cx={0} cy={0} r={5} fill="var(--bg-elev)" stroke={COLOR_CG} strokeWidth={1.3} />
+      <line x1={-4} y1={0} x2={4} y2={0} stroke={COLOR_CG} strokeWidth={0.9} />
+      <line x1={0} y1={-4} x2={0} y2={4} stroke={COLOR_CG} strokeWidth={0.9} />
 
-      {/* force vectors with leader-line labels */}
+      {/* ── Force vectors ── */}
       <ForceArrow
         end={liftEnd}
         labelAt={labelPosition(liftEnd, 0)}
@@ -459,7 +324,7 @@ export function FlightDiagram({ state }: Props) {
       />
       <ForceArrow
         end={thrustEnd}
-        labelAt={labelPosition(thrustEnd, -38)}
+        labelAt={labelPosition(thrustEnd, -40)}
         color={COLOR_THRUST}
         label="T"
         value={`${Math.round(thrust).toLocaleString()} N`}
@@ -467,12 +332,57 @@ export function FlightDiagram({ state }: Props) {
       />
       <ForceArrow
         end={dragEnd}
-        labelAt={labelPosition(dragEnd, -38)}
+        labelAt={labelPosition(dragEnd, -40)}
         color={COLOR_DRAG}
         label="D"
         value={`${Math.round(D).toLocaleString()} N`}
         ariaLabel={`Drag ${Math.round(D)} newtons, opposite to flight path`}
       />
+
+      {/* ── Drafting title block (lower-right) ── */}
+      <g>
+        <rect
+          x={196}
+          y={120}
+          width={170}
+          height={42}
+          fill="var(--bg-elev)"
+          stroke="var(--rule)"
+          strokeWidth={0.8}
+        />
+        <line x1={196} y1={132} x2={366} y2={132} stroke="var(--rule)" strokeWidth={0.5} opacity={0.7} />
+        <text
+          x={203}
+          y={130}
+          fill="var(--text-soft)"
+          fontSize={8.5}
+          fontFamily="'IBM Plex Sans Condensed', system-ui"
+          letterSpacing="0.18em"
+          fontWeight={600}
+        >
+          FIG · SIDE PROFILE
+        </text>
+        <text
+          x={203}
+          y={146}
+          fill="var(--text)"
+          fontSize={10}
+          fontFamily="'Fraunces', Georgia, serif"
+          fontStyle="italic"
+        >
+          Cessna 152 — four forces
+        </text>
+        <text
+          x={203}
+          y={157}
+          fill="var(--text-mute)"
+          fontSize={8}
+          fontFamily="'JetBrains Mono', monospace"
+          letterSpacing="0.04em"
+        >
+          {V_kts.toFixed(0)} KIAS · SL ISA
+        </text>
+      </g>
     </svg>
   );
 }
