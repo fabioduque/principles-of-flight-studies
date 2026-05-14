@@ -64,7 +64,8 @@ export default function App() {
   const [theta, setTheta] = useState(DEFAULTS.theta);
   const [thrust, setThrust] = useState(DEFAULTS.thrust);
   const [bank, setBank] = useState(DEFAULTS.bank);
-  const [theme, setTheme] = useState<Theme>('auto');
+  // Dark by default — the blueprint look is the project's signature.
+  const [theme, setTheme] = useState<Theme>('dark');
   // Default to English; user picks PT manually from the header toggle.
   const [lang, setLang] = useState<Lang>('en');
   const t = translations[lang];
