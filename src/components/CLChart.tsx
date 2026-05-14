@@ -12,6 +12,7 @@ import {
 import type { Flaps } from '../physics';
 import { FLAP_CONFIGS, FLAP_SETTINGS, sampleCLCurve } from '../physics';
 import { StallStamp } from './StallStamp';
+import { useI18n } from '../i18n';
 
 interface Props {
   activeFlaps: Flaps;
@@ -29,9 +30,16 @@ const FLAP_STYLES: Record<Flaps, { dashArray: string; color: string; styleLabel:
 };
 
 export function CLChart({ activeFlaps, alpha, CL, showAllFlapCurves, stalled }: Props) {
+  const { t } = useI18n();
+
+  // Sample range adapts to the current α so the operating-point dot stays on
+  // the curve even when the user has pitched well past stall (e.g. α > 24°).
+  const alphaMin = Math.min(-6, Math.floor(alpha) - 2);
+  const alphaMax = Math.max(24, Math.ceil(alpha) + 4);
+
   // Build a single dataset where each row has α plus CL_0, CL_10, CL_30 values.
   const merged: Record<string, number>[] = [];
-  const sampled = FLAP_SETTINGS.map((f) => sampleCLCurve(f));
+  const sampled = FLAP_SETTINGS.map((f) => sampleCLCurve(f, 0.5, alphaMin, alphaMax));
   const length = sampled[0].length;
   for (let i = 0; i < length; i++) {
     const row: Record<string, number> = { alpha: sampled[0][i].alpha };
@@ -40,6 +48,11 @@ export function CLChart({ activeFlaps, alpha, CL, showAllFlapCurves, stalled }: 
     });
     merged.push(row);
   }
+
+  // Ticks: keep 4° spacing across whatever range is active.
+  const ticks: number[] = [];
+  const tickStart = Math.ceil(alphaMin / 4) * 4;
+  for (let v = tickStart; v <= alphaMax; v += 4) ticks.push(v);
 
   const activeCfg = FLAP_CONFIGS[activeFlaps];
 
@@ -65,13 +78,13 @@ export function CLChart({ activeFlaps, alpha, CL, showAllFlapCurves, stalled }: 
             <XAxis
               dataKey="alpha"
               type="number"
-              domain={[-6, 24]}
-              ticks={[-4, 0, 4, 8, 12, 16, 20]}
+              domain={[alphaMin, alphaMax]}
+              ticks={ticks}
               tickFormatter={(v: number) => `${v}°`}
               stroke="currentColor"
               fontSize={11}
               label={{
-                value: 'Angle of attack α (°)',
+                value: t.alphaAxis,
                 position: 'insideBottom',
                 offset: -12,
                 fill: 'currentColor',
@@ -84,7 +97,7 @@ export function CLChart({ activeFlaps, alpha, CL, showAllFlapCurves, stalled }: 
               stroke="currentColor"
               fontSize={11}
               label={{
-                value: 'Lift coefficient CL',
+                value: t.clAxis,
                 angle: -90,
                 position: 'insideLeft',
                 offset: 12,
@@ -144,7 +157,7 @@ export function CLChart({ activeFlaps, alpha, CL, showAllFlapCurves, stalled }: 
               fill="var(--c-cg)"
               stroke="var(--bg-elev)"
               strokeWidth={2}
-              ifOverflow="extendDomain"
+              ifOverflow="discard"
             />
           </LineChart>
         </ResponsiveContainer>

@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import type { FlightState } from '../physics';
 import { WEIGHT_N } from '../physics';
 import { AircraftSilhouette } from './AircraftSilhouette';
+import { useI18n } from '../i18n';
 
 interface Props {
   state: FlightState;
@@ -120,6 +121,7 @@ const COLOR_CG = 'var(--c-cg)';
 
 export function FlightDiagram({ state }: Props) {
   const { alpha, theta, gamma, L, D, thrust, V_kts } = state;
+  const { t } = useI18n();
 
   const bodyDir: Vec = { x: Math.cos(rad(theta)), y: -Math.sin(rad(theta)) };
   const fpDir: Vec = { x: Math.cos(rad(gamma)), y: -Math.sin(rad(gamma)) };
@@ -200,7 +202,7 @@ export function FlightDiagram({ state }: Props) {
         letterSpacing="0.14em"
         fontWeight={600}
       >
-        HORIZON
+        {t.horizon}
       </text>
 
       {/* Flight path */}
@@ -224,7 +226,7 @@ export function FlightDiagram({ state }: Props) {
         fontWeight={600}
         textAnchor="end"
       >
-        FLIGHT PATH
+        {t.flightPath}
       </text>
 
       {/* Chord */}
@@ -423,46 +425,11 @@ export function FlightDiagram({ state }: Props) {
             fontWeight={700}
             letterSpacing="0.22em"
           >
-            ⚠ STALLED
+            ⚠ {t.stalledStamp}
           </text>
         </g>
       )}
 
-      {/* Title block */}
-      <g>
-        <rect x={196} y={120} width={170} height={42} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.8} />
-        <line x1={196} y1={132} x2={366} y2={132} stroke="var(--rule)" strokeWidth={0.5} opacity={0.7} />
-        <text
-          x={203}
-          y={130}
-          fill="var(--text-soft)"
-          fontSize={9}
-          fontFamily="'IBM Plex Sans Condensed', system-ui"
-          letterSpacing="0.18em"
-          fontWeight={600}
-        >
-          FIG · SIDE PROFILE
-        </text>
-        <text
-          x={203}
-          y={146}
-          fill="var(--text)"
-          fontSize={10.5}
-          fontFamily="'Bricolage Grotesque', system-ui, sans-serif"
-        >
-          Cessna 152 — four forces
-        </text>
-        <text
-          x={203}
-          y={157}
-          fill="var(--text-mute)"
-          fontSize={9}
-          fontFamily="'IBM Plex Mono', monospace"
-          letterSpacing="0.02em"
-        >
-          {V_kts.toFixed(0)} KIAS · SL ISA
-        </text>
-      </g>
     </svg>
   );
 }

@@ -9,6 +9,7 @@
 
 import type { FlightState } from '../physics';
 import { WEIGHT_N } from '../physics';
+import { useI18n } from '../i18n';
 
 interface Props {
   state: FlightState;
@@ -20,6 +21,7 @@ const COLOR_COMP = 'var(--c-magenta)';
 const COLOR_HORIZON = 'var(--text-mute)';
 
 export function BankView({ state }: Props) {
+  const { t } = useI18n();
   const phi = state.bankDeg;
   const phiRad = (phi * Math.PI) / 180;
   const n = state.L / WEIGHT_N;
@@ -76,7 +78,7 @@ export function BankView({ state }: Props) {
         <line key={x} x1={x} y1={-2} x2={x} y2={2} stroke={COLOR_HORIZON} strokeWidth={0.6} opacity={0.7} />
       ))}
       <text x={-208} y={-5} fill={COLOR_HORIZON} fontSize={8.5} fontFamily="'IBM Plex Sans Condensed', system-ui" letterSpacing="0.1em">
-        HORIZON
+        {t.horizon}
       </text>
 
       {/* ── Airframe (rotates with bank around CG = origin) ── */}
@@ -207,7 +209,7 @@ export function BankView({ state }: Props) {
             letterSpacing="0.08em"
             textAnchor="middle"
           >
-            TURN
+            {t.turn}
           </text>
         </g>
       )}
@@ -279,25 +281,11 @@ export function BankView({ state }: Props) {
             fontWeight={700}
             letterSpacing="0.22em"
           >
-            ⚠ STALLED
+            ⚠ {t.stalledStamp}
           </text>
         </g>
       )}
 
-      {/* ── Title block (top-left) ── */}
-      <g>
-        <rect x={-215} y={-195} width={150} height={56} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.8} />
-        <text x={-208} y={-180} fill="var(--text-soft)" fontSize={9} fontFamily="'IBM Plex Sans Condensed', system-ui" letterSpacing="0.16em" fontWeight={600}>
-          FIG · AFT VIEW
-        </text>
-        <line x1={-215} y1={-172} x2={-65} y2={-172} stroke="var(--rule)" strokeWidth={0.6} opacity={0.7} />
-        <text x={-208} y={-158} fill="var(--text)" fontSize={12} fontFamily="'IBM Plex Mono', monospace" fontWeight={500}>
-          φ {phi >= 0 ? '+' : ''}{phi.toFixed(0)}°
-        </text>
-        <text x={-208} y={-144} fill="var(--accent)" fontSize={12} fontFamily="'IBM Plex Mono', monospace" fontWeight={700}>
-          n {n.toFixed(2)} g
-        </text>
-      </g>
     </svg>
   );
 }

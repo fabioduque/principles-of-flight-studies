@@ -6,6 +6,7 @@
 // Increments: pitch step = 2.5° · bank step = 5°.
 
 import { useCallback, useRef } from 'react';
+import { useI18n } from '../i18n';
 
 interface Props {
   theta: number;
@@ -89,6 +90,7 @@ export function AttitudeControl({
   keyboardMode = false,
 }: Props) {
   const ref = useRef<SVGSVGElement>(null);
+  const { t } = useI18n();
 
   const halfPitchRange = (pitchMax - pitchMin) / 2;
   const pitchMid = (pitchMin + pitchMax) / 2;
@@ -148,7 +150,7 @@ export function AttitudeControl({
       {/* ── LEFT: nudge cross + live readout ── */}
       <div className="flex flex-col items-center gap-1.5 min-w-[88px]">
         <div className="meta" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
-          NUDGE
+          {t.nudge}
         </div>
 
         {/* Cross — each button has a larger arrow + accent-bordered keycap
@@ -403,7 +405,7 @@ export function AttitudeControl({
               letterSpacing="0.22em"
               fontWeight={600}
             >
-              BANK φ — PRESETS · STEP {BANK_STEP}°
+              {t.bankPresets}
             </text>
           </svg>
         </div>
@@ -412,7 +414,7 @@ export function AttitudeControl({
       {/* ── Pitch preset tape (vertical column to the right of the AI) ── */}
       <div className="flex flex-col items-stretch min-w-[68px]">
         <div className="meta mb-1 text-center" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
-          PITCH θ
+          {t.pitchLabel}
         </div>
         <div className="flex flex-col gap-px border border-app">
           {PITCH_PRESETS.map((p) => {
@@ -440,7 +442,7 @@ export function AttitudeControl({
           })}
         </div>
         <div className="text-[9px] text-fg-mute mt-1 text-center" style={{ letterSpacing: '0.1em' }}>
-          STEP {PITCH_STEP}°
+          {t.step} {PITCH_STEP}°
         </div>
       </div>
     </div>

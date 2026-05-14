@@ -17,6 +17,7 @@ import {
   PRESETS,
   stallSpeed,
 } from '../physics';
+import { translatePresetName, translateStatus, useI18n } from '../i18n';
 
 const MAX_THRUST = 1100;
 const PITCH_STEP = 2.5;
@@ -153,11 +154,6 @@ function statusColor(status: FlightState['status']): string {
   }
 }
 
-function statusText(status: FlightState['status']): string {
-  if (status === 'pull-up') return 'pull-up';
-  if (status === 'near-stall') return 'near stall';
-  return status;
-}
 
 function clamp(v: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, v));
@@ -255,6 +251,7 @@ export function ControlConsole(props: Props) {
     setTheta, setBank, setThrust, setFlaps,
     applyPreset, resetToDefaults,
   } = props;
+  const { t } = useI18n();
 
   const Vs = stallSpeed(flaps, bank);
   const stallMargin = state.V_kts - Vs;
@@ -264,6 +261,7 @@ export function ControlConsole(props: Props) {
   const statBg = status === 'stalled'
     ? 'color-mix(in srgb, var(--c-weight) 22%, transparent)'
     : 'transparent';
+  const statusLabel = translateStatus(status, t);
 
   return (
     <div
@@ -284,10 +282,10 @@ export function ControlConsole(props: Props) {
       >
         <div className="flex items-center gap-3 min-w-0">
           <span className="meta" style={{ fontSize: 8.5, letterSpacing: '0.24em' }}>
-            CONSOLE · PILOT INPUTS
+            {t.consoleTitle}
           </span>
           <span className="hidden sm:inline meta text-fg-mute" style={{ fontSize: 8.5, letterSpacing: '0.18em' }}>
-            STEP θ {PITCH_STEP}° · φ {BANK_STEP}° · T 10 N
+            {t.step} θ {PITCH_STEP}° · φ {BANK_STEP}° · T 10 N
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -300,7 +298,7 @@ export function ControlConsole(props: Props) {
               letterSpacing: '0.14em',
             }}
           >
-            {statusText(status)}
+            {statusLabel}
           </span>
           <button
             type="button"
@@ -335,7 +333,7 @@ export function ControlConsole(props: Props) {
             aria-label={collapsed ? 'Expand console' : 'Collapse console'}
             title={collapsed ? 'Expand console' : 'Collapse console'}
           >
-            <span className="font-semibold">{collapsed ? 'EXPAND' : 'COLLAPSE'}</span>
+            <span className="font-semibold">{collapsed ? t.expand : t.collapse}</span>
             <span className="text-base leading-none">{collapsed ? '▴' : '▾'}</span>
           </button>
         </div>
@@ -348,7 +346,7 @@ export function ControlConsole(props: Props) {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             {/* Inline nudges */}
             <InlineNudge
-              label="PITCH"
+              label={t.pitchLabel.replace(' θ', '')}
               symbol="θ"
               value={theta}
               unit="°"
@@ -359,7 +357,7 @@ export function ControlConsole(props: Props) {
               color="var(--accent)"
             />
             <InlineNudge
-              label="BANK"
+              label={t.bankPresets.split(' ')[0]}
               symbol="φ"
               value={bank}
               unit="°"
@@ -372,7 +370,7 @@ export function ControlConsole(props: Props) {
 
             {/* Inline throttle slider */}
             <div className="flex items-center gap-2">
-              <span className="meta" style={{ fontSize: 8.5 }}>THROTTLE</span>
+              <span className="meta" style={{ fontSize: 8.5 }}>{t.throttle}</span>
               <input
                 type="range"
                 min={0}
@@ -389,7 +387,7 @@ export function ControlConsole(props: Props) {
 
             {/* Flaps quick-select */}
             <div className="flex items-center gap-2">
-              <span className="meta" style={{ fontSize: 8.5 }}>FLAPS</span>
+              <span className="meta" style={{ fontSize: 8.5 }}>{t.flaps}</span>
               <div className="flex border border-app">
                 {FLAP_SETTINGS.map((f) => (
                   <button
@@ -426,12 +424,12 @@ export function ControlConsole(props: Props) {
                 </div>
               </div>
               <div className="px-2 py-1 text-center min-w-[60px]" style={{ background: statBg }}>
-                <div className="meta" style={{ fontSize: 7.5 }}>STATUS</div>
+                <div className="meta" style={{ fontSize: 7.5 }}>{t.status}</div>
                 <div
                   className="text-[10px] font-semibold uppercase"
                   style={{ color: statClr, letterSpacing: '0.06em', fontFamily: "'IBM Plex Sans Condensed', system-ui" }}
                 >
-                  {statusText(status)}
+                  {statusLabel}
                 </div>
               </div>
             </div>
@@ -471,7 +469,7 @@ export function ControlConsole(props: Props) {
                       color: keyboardMode ? 'var(--accent)' : 'var(--text-soft)',
                     }}
                   >
-                    {keyboardMode ? 'KEYBOARD ON' : 'KEYBOARD OFF'}
+                    {keyboardMode ? t.keyboardOn : t.keyboardOff}
                   </span>
                 </button>
               </div>
@@ -517,7 +515,7 @@ export function ControlConsole(props: Props) {
                     <div className="display-num text-2xl leading-none" style={{ color: 'var(--c-thrust)' }}>
                       {throttlePct}
                     </div>
-                    <div className="meta mt-0.5" style={{ fontSize: 8 }}>PERCENT</div>
+                    <div className="meta mt-0.5" style={{ fontSize: 8 }}>{t.percent}</div>
                     <div className="num text-[10px] text-fg-soft mt-1">
                       {Math.round(thrust)} N
                     </div>
@@ -560,10 +558,10 @@ export function ControlConsole(props: Props) {
               <div className="grid grid-cols-4 border border-app divide-x divide-[var(--border)] bg-app">
                 {/* Row 1 */}
                 <MetricCell label="IAS" value={state.V_kts.toFixed(0)} unit="kt" />
-                <MetricCell label="α — AoA" value={state.alpha.toFixed(1) + '°'} />
-                <MetricCell label="γ — flight path" value={state.gamma.toFixed(1) + '°'} />
+                <MetricCell label={t.aoa} value={state.alpha.toFixed(1) + '°'} />
+                <MetricCell label={t.gammaFlightPath} value={state.gamma.toFixed(1) + '°'} />
                 <MetricCell
-                  label="n — load"
+                  label={t.nLoad}
                   value={state.n.toFixed(2)}
                   unit="g"
                   tone={state.n > 1.5 ? 'warn' : 'default'}
@@ -578,7 +576,7 @@ export function ControlConsole(props: Props) {
                   hint={`flaps ${flaps}° · φ ${bank.toFixed(0)}°`}
                 />
                 <MetricCell
-                  label="margin V−Vs"
+                  label={t.margin}
                   value={(stallMargin >= 0 ? '+' : '') + stallMargin.toFixed(0)}
                   unit="kt"
                   tone={stallMargin < 5 ? 'bad' : stallMargin < 15 ? 'warn' : 'good'}
@@ -589,7 +587,7 @@ export function ControlConsole(props: Props) {
                   hint={`L ${Math.round(state.L)} · D ${Math.round(state.D)} N`}
                 />
                 <div className="px-2.5 py-2 flex flex-col justify-center min-w-0" style={{ background: statBg }}>
-                  <div className="meta" style={{ fontSize: 8.5 }}>STATUS</div>
+                  <div className="meta" style={{ fontSize: 8.5 }}>{t.status}</div>
                   <div
                     className="text-[12px] font-bold uppercase mt-1 leading-tight"
                     style={{
@@ -598,10 +596,10 @@ export function ControlConsole(props: Props) {
                       fontFamily: "'IBM Plex Sans Condensed', system-ui",
                     }}
                   >
-                    {statusText(status)}
+                    {statusLabel}
                   </div>
                   <div className="text-[9px] text-fg-mute num mt-1 truncate">
-                    α/α_stall {(state.alpha / (state.flaps === 0 ? 16 : state.flaps === 10 ? 14 : 12)).toFixed(2)}
+                    {t.alphaStallRatio} {(state.alpha / (state.flaps === 0 ? 16 : state.flaps === 10 ? 14 : 12)).toFixed(2)}
                   </div>
                 </div>
               </div>
@@ -620,7 +618,7 @@ export function ControlConsole(props: Props) {
                       className="btn !border-0 flex-1 min-w-0 text-[10px] px-1.5 py-1 border-r last:border-r-0"
                       style={{ borderRightColor: 'var(--border)' }}
                     >
-                      {p.name}
+                      {translatePresetName(p.name, t)}
                     </button>
                   ))}
                 </div>
@@ -630,7 +628,7 @@ export function ControlConsole(props: Props) {
                   className="btn-ghost btn text-[10px] whitespace-nowrap"
                   title="Reset to cruise defaults"
                 >
-                  ↺ reset
+                  ↺ {t.reset}
                 </button>
               </div>
             </div>

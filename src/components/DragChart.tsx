@@ -11,6 +11,7 @@ import {
 import type { Flaps } from '../physics';
 import { sampleDragCurve, dragAtTrim } from '../physics';
 import { StallStamp } from './StallStamp';
+import { useI18n } from '../i18n';
 
 interface Props {
   flaps: Flaps;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function DragChart({ flaps, V_kts, stalled }: Props) {
+  const { t } = useI18n();
   // Sample the trim drag curve up to at least 130 kt, but extend if the
   // current point exceeds that (e.g. unloaded descent past Vne) so the dot
   // stays on the curve instead of detaching far off-chart.
@@ -55,13 +57,13 @@ export function DragChart({ flaps, V_kts, stalled }: Props) {
               tickFormatter={(v: number) => `${v} kt`}
               stroke="currentColor"
               fontSize={11}
-              label={{ value: 'Airspeed (kt)', position: 'insideBottom', offset: -14, fill: 'currentColor', fontSize: 11 }}
+              label={{ value: t.airspeedAxis, position: 'insideBottom', offset: -14, fill: 'currentColor', fontSize: 11 }}
             />
             <YAxis
               stroke="currentColor"
               fontSize={11}
               tickFormatter={(v: number) => `${Math.round(v)}`}
-              label={{ value: 'Drag (N)', angle: -90, position: 'insideLeft', offset: 14, fill: 'currentColor', fontSize: 11 }}
+              label={{ value: t.dragAxis, angle: -90, position: 'insideLeft', offset: 14, fill: 'currentColor', fontSize: 11 }}
               domain={[0, yMaxHint]}
             />
             <Tooltip
@@ -93,13 +95,13 @@ export function DragChart({ flaps, V_kts, stalled }: Props) {
         </ResponsiveContainer>
       </div>
       <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs num">
-        <li className="inline-flex items-center gap-1.5"><span className="inline-block w-3 h-0.5" style={{ background: 'var(--c-drag)' }} />parasite ∝ V²</li>
-        <li className="inline-flex items-center gap-1.5"><span className="inline-block w-3 h-0.5" style={{ background: 'var(--c-magenta)' }} />induced ∝ 1/V²</li>
-        <li className="inline-flex items-center gap-1.5"><span className="inline-block w-3 h-0.5" style={{ background: 'var(--c-lift)' }} />total</li>
+        <li className="inline-flex items-center gap-1.5"><span className="inline-block w-3 h-0.5" style={{ background: 'var(--c-drag)' }} />{t.parasiteLegend}</li>
+        <li className="inline-flex items-center gap-1.5"><span className="inline-block w-3 h-0.5" style={{ background: 'var(--c-magenta)' }} />{t.inducedLegend}</li>
+        <li className="inline-flex items-center gap-1.5"><span className="inline-block w-3 h-0.5" style={{ background: 'var(--c-lift)' }} />{t.totalLegend}</li>
         <li className="ml-auto text-fg-soft">
           {onCurve
-            ? `Total drag at trim · ${Math.round(here.total)} N at ${V_kts.toFixed(0)} kt`
-            : `Off-trim · ${V_kts.toFixed(0)} kt outside steady-trim band`}
+            ? `${t.totalDragAtTrim} · ${Math.round(here.total)} N · ${V_kts.toFixed(0)} kt`
+            : `${t.offTrim} · ${V_kts.toFixed(0)} kt — ${t.outsideTrimBand}`}
         </li>
       </ul>
     </div>

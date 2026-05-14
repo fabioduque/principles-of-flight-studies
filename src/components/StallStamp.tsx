@@ -2,12 +2,15 @@
 // is stalled. Pulses subtly to catch attention. Placed inside a `position:
 // relative` parent in the corner.
 
+import { useI18n } from '../i18n';
+
 interface Props {
   /** Corner placement. Defaults to top-right. */
   position?: 'tr' | 'tl' | 'br' | 'bl';
 }
 
 export function StallStamp({ position = 'tr' }: Props) {
+  const { t } = useI18n();
   const placement: React.CSSProperties =
     position === 'tr' ? { top: 8, right: 8 } :
     position === 'tl' ? { top: 8, left: 8 } :
@@ -32,7 +35,7 @@ export function StallStamp({ position = 'tr' }: Props) {
       aria-label="Wing stalled"
     >
       <span style={{ fontSize: 11 }}>⚠</span>
-      <span>STALLED</span>
+      <span>{t.stalledStamp}</span>
     </div>
   );
 }
