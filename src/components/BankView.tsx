@@ -212,53 +212,61 @@ export function BankView({ state }: Props) {
         </g>
       )}
 
-      {/* ── Labels (drafting style, leader-style) ── */}
-      <g fontFamily="'JetBrains Mono', monospace">
-        {/* L */}
-        <g transform={`translate(${Lx + (Lx >= 0 ? 10 : -10)}, ${Ly - 10})`}>
-          <text fill={COLOR_LIFT} fontSize={10.5} fontWeight={700} textAnchor={Lx >= 0 ? 'start' : 'end'}>
-            L
-          </text>
-          <text fill={COLOR_LIFT} fontSize={9} y={11} textAnchor={Lx >= 0 ? 'start' : 'end'}>
-            {Math.round(state.L).toLocaleString()} N
-          </text>
-        </g>
-
-        {/* W */}
-        <text x={8} y={Wpx + 6} fill={COLOR_WEIGHT} fontSize={10.5} fontWeight={700}>W</text>
-        <text x={8} y={Wpx + 17} fill={COLOR_WEIGHT} fontSize={9}>{WEIGHT_N.toLocaleString()} N</text>
-
-        {/* L·cos φ */}
-        <text x={-6} y={Ly / 2 + 3} fill={COLOR_COMP} fontSize={9.5} textAnchor="end">
-          L·cos φ = {Math.round(state.L * Math.cos(phiRad)).toLocaleString()} N
+      {/* ── Drafting tag labels — paper bg, ink text, color swatch ── */}
+      {/* L tag */}
+      <g transform={`translate(${Lx + (Lx >= 0 ? 8 : -112)}, ${Ly - 12})`}>
+        <rect x={0} y={0} width={104} height={26} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.8} />
+        <rect x={0} y={0} width={5} height={26} fill={COLOR_LIFT} />
+        <text x={11} y={11} fill={COLOR_LIFT} fontSize={13} fontWeight={700} fontFamily="'Fraunces', Georgia, serif" fontStyle="italic">L</text>
+        <text x={11} y={22} fill="var(--text)" fontSize={11} fontFamily="'IBM Plex Mono', monospace" fontWeight={500}>
+          {Math.round(state.L).toLocaleString()} N
         </text>
-
-        {/* L·sin φ */}
-        {Math.abs(Lx) > 8 && (
-          <text
-            x={Lx / 2}
-            y={-6}
-            fill={COLOR_COMP}
-            fontSize={9.5}
-            textAnchor="middle"
-          >
-            L·sin φ = {Math.round(Math.abs(state.L * Math.sin(phiRad))).toLocaleString()} N
-          </text>
-        )}
       </g>
 
-      {/* ── Title-block style readouts (top-left) ── */}
+      {/* W tag */}
+      <g transform={`translate(8, ${Wpx + 4})`}>
+        <rect x={0} y={0} width={104} height={26} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.8} />
+        <rect x={0} y={0} width={5} height={26} fill={COLOR_WEIGHT} />
+        <text x={11} y={11} fill={COLOR_WEIGHT} fontSize={13} fontWeight={700} fontFamily="'Fraunces', Georgia, serif" fontStyle="italic">W</text>
+        <text x={11} y={22} fill="var(--text)" fontSize={11} fontFamily="'IBM Plex Mono', monospace" fontWeight={500}>
+          {WEIGHT_N.toLocaleString()} N
+        </text>
+      </g>
+
+      {/* L·cos φ tag — sits on the vertical projection */}
+      <g transform={`translate(${-118}, ${Ly / 2 - 11})`}>
+        <rect x={0} y={0} width={108} height={22} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.7} />
+        <rect x={0} y={0} width={4} height={22} fill={COLOR_COMP} />
+        <text x={9} y={15} fill="var(--text)" fontSize={11} fontFamily="'IBM Plex Mono', monospace" fontWeight={500}>
+          <tspan fill={COLOR_COMP} fontWeight={700}>L cos φ</tspan>
+          <tspan> {Math.round(state.L * Math.cos(phiRad)).toLocaleString()}</tspan>
+        </text>
+      </g>
+
+      {/* L·sin φ tag — only when bank > 0 */}
+      {Math.abs(Lx) > 14 && (
+        <g transform={`translate(${Lx / 2 - 54}, ${-30})`}>
+          <rect x={0} y={0} width={108} height={22} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.7} />
+          <rect x={0} y={0} width={4} height={22} fill={COLOR_COMP} />
+          <text x={9} y={15} fill="var(--text)" fontSize={11} fontFamily="'IBM Plex Mono', monospace" fontWeight={500}>
+            <tspan fill={COLOR_COMP} fontWeight={700}>L sin φ</tspan>
+            <tspan> {Math.round(Math.abs(state.L * Math.sin(phiRad))).toLocaleString()}</tspan>
+          </text>
+        </g>
+      )}
+
+      {/* ── Title block (top-left) ── */}
       <g>
-        <rect x={-215} y={-195} width={130} height={50} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.8} />
-        <text x={-208} y={-180} fill="var(--text-soft)" fontSize={8.5} fontFamily="'IBM Plex Sans Condensed', system-ui" letterSpacing="0.14em" fontWeight={600}>
+        <rect x={-215} y={-195} width={150} height={56} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.8} />
+        <text x={-208} y={-180} fill="var(--text-soft)" fontSize={9} fontFamily="'IBM Plex Sans Condensed', system-ui" letterSpacing="0.16em" fontWeight={600}>
           FIG · AFT VIEW
         </text>
-        <line x1={-215} y1={-172} x2={-85} y2={-172} stroke="var(--rule)" strokeWidth={0.6} opacity={0.7} />
-        <text x={-208} y={-160} fill="var(--text)" fontSize={11} fontFamily="'JetBrains Mono', monospace" fontWeight={500}>
-          φ = {phi >= 0 ? '+' : ''}{phi.toFixed(0)}°
+        <line x1={-215} y1={-172} x2={-65} y2={-172} stroke="var(--rule)" strokeWidth={0.6} opacity={0.7} />
+        <text x={-208} y={-158} fill="var(--text)" fontSize={12} fontFamily="'IBM Plex Mono', monospace" fontWeight={500}>
+          φ {phi >= 0 ? '+' : ''}{phi.toFixed(0)}°
         </text>
-        <text x={-208} y={-148} fill="var(--accent)" fontSize={11} fontFamily="'JetBrains Mono', monospace" fontWeight={600}>
-          n = {n.toFixed(2)} g
+        <text x={-208} y={-144} fill="var(--accent)" fontSize={12} fontFamily="'IBM Plex Mono', monospace" fontWeight={700}>
+          n {n.toFixed(2)} g
         </text>
       </g>
     </svg>

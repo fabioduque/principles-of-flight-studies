@@ -110,8 +110,50 @@ export function AttitudeControl({
   const bezelBankInner = VIEW_R + 4;
 
   return (
-    <div className="select-none flex items-stretch gap-3">
-      {/* ── AI + bezel bank presets ── */}
+    <div className="select-none flex items-center gap-3">
+      {/* ── LEFT: nudge cross + live readout ── */}
+      <div className="flex flex-col items-center gap-1.5 min-w-[88px]">
+        <div className="meta" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
+          NUDGE
+        </div>
+        <div className="grid grid-cols-3 grid-rows-3 gap-0.5">
+          <span />
+          <button type="button" onClick={() => nudgePitch(-PITCH_STEP)}
+            className="btn px-2 py-0.5 text-xs"
+            title={`pitch −${PITCH_STEP}°`} aria-label="pitch down">▲</button>
+          <span />
+          <button type="button" onClick={() => nudgeBank(-BANK_STEP)}
+            className="btn px-2 py-0.5 text-xs"
+            title={`bank −${BANK_STEP}°`} aria-label="bank left">◀</button>
+          <button type="button" onClick={() => { setTheta(0); setBank(0); }}
+            className="btn-ghost btn px-2 py-0.5 text-[10px]"
+            title="centre" aria-label="centre">●</button>
+          <button type="button" onClick={() => nudgeBank(BANK_STEP)}
+            className="btn px-2 py-0.5 text-xs"
+            title={`bank +${BANK_STEP}°`} aria-label="bank right">▶</button>
+          <span />
+          <button type="button" onClick={() => nudgePitch(PITCH_STEP)}
+            className="btn px-2 py-0.5 text-xs"
+            title={`pitch +${PITCH_STEP}°`} aria-label="pitch up">▼</button>
+          <span />
+        </div>
+        <div className="border border-app px-2 py-1 bg-app w-full">
+          <div className="flex items-center justify-between text-[10px] num text-fg-soft">
+            <span>θ</span>
+            <span className="text-fg font-bold tabular-nums">
+              {(theta > 0 ? '+' : '') + theta.toFixed(1)}°
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-[10px] num text-fg-soft">
+            <span>φ</span>
+            <span className="text-fg font-bold tabular-nums">
+              {(bank > 0 ? '+' : '') + bank.toFixed(0)}°
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── MIDDLE: AI + bezel bank presets ── */}
       <div className="flex flex-col items-center">
         <div className="relative">
           <svg
@@ -172,8 +214,8 @@ export function AttitudeControl({
                       <line x1={-len} y1={y} x2={len} y2={y} stroke={HORIZON_LINE} strokeWidth={1.3} />
                       {isMajor && (
                         <>
-                          <text x={len + 4} y={y + 3.2} fontSize={9} fill={HORIZON_LINE} fontFamily="'JetBrains Mono', monospace" fontWeight={600}>{Math.abs(p)}</text>
-                          <text x={-len - 4} y={y + 3.2} fontSize={9} fill={HORIZON_LINE} fontFamily="'JetBrains Mono', monospace" fontWeight={600} textAnchor="end">{Math.abs(p)}</text>
+                          <text x={len + 4} y={y + 3.2} fontSize={9} fill={HORIZON_LINE} fontFamily="'IBM Plex Mono', monospace" fontWeight={600}>{Math.abs(p)}</text>
+                          <text x={-len - 4} y={y + 3.2} fontSize={9} fill={HORIZON_LINE} fontFamily="'IBM Plex Mono', monospace" fontWeight={600} textAnchor="end">{Math.abs(p)}</text>
                         </>
                       )}
                     </g>
@@ -212,7 +254,7 @@ export function AttitudeControl({
               const a = (b * Math.PI) / 180;
               const r = INNER_R - 18;
               return (
-                <text key={b} x={r * Math.sin(a)} y={-r * Math.cos(a) + 3.2} fontSize={8.5} fill={SCALE} fontFamily="'JetBrains Mono', monospace" fontWeight={600} textAnchor="middle" opacity={0.92}>{Math.abs(b)}</text>
+                <text key={b} x={r * Math.sin(a)} y={-r * Math.cos(a) + 3.2} fontSize={8.5} fill={SCALE} fontFamily="'IBM Plex Mono', monospace" fontWeight={600} textAnchor="middle" opacity={0.92}>{Math.abs(b)}</text>
               );
             })}
 
@@ -264,7 +306,7 @@ export function AttitudeControl({
                     textAnchor="middle"
                     fontSize={isActive ? 10 : 9}
                     fill={isActive ? 'var(--accent)' : 'var(--text-soft)'}
-                    fontFamily="'JetBrains Mono', monospace"
+                    fontFamily="'IBM Plex Mono', monospace"
                     fontWeight={isActive ? 700 : 500}
                     style={{ pointerEvents: 'none' }}
                   >
@@ -288,35 +330,6 @@ export function AttitudeControl({
               BANK φ — PRESETS · STEP {BANK_STEP}°
             </text>
           </svg>
-        </div>
-
-        {/* Compact 4-way nudge cross — below the AI */}
-        <div className="mt-2 flex flex-col items-center gap-1">
-          <div className="grid grid-cols-3 grid-rows-3 gap-0.5">
-            <span />
-            <button type="button" onClick={() => nudgePitch(-PITCH_STEP)}
-              className="btn px-2 py-0.5 text-xs"
-              title={`pitch −${PITCH_STEP}°`} aria-label="pitch down">▲</button>
-            <span />
-            <button type="button" onClick={() => nudgeBank(-BANK_STEP)}
-              className="btn px-2 py-0.5 text-xs"
-              title={`bank −${BANK_STEP}°`} aria-label="bank left">◀</button>
-            <button type="button" onClick={() => { setTheta(0); setBank(0); }}
-              className="btn-ghost btn px-2 py-0.5 text-[10px]"
-              title="centre" aria-label="centre">●</button>
-            <button type="button" onClick={() => nudgeBank(BANK_STEP)}
-              className="btn px-2 py-0.5 text-xs"
-              title={`bank +${BANK_STEP}°`} aria-label="bank right">▶</button>
-            <span />
-            <button type="button" onClick={() => nudgePitch(PITCH_STEP)}
-              className="btn px-2 py-0.5 text-xs"
-              title={`pitch +${PITCH_STEP}°`} aria-label="pitch up">▼</button>
-            <span />
-          </div>
-          <div className="flex items-baseline gap-3 text-[10px] num text-fg-soft mt-0.5">
-            <span>θ <span className="text-fg font-bold">{(theta > 0 ? '+' : '') + theta.toFixed(1)}°</span></span>
-            <span>φ <span className="text-fg font-bold">{(bank > 0 ? '+' : '') + bank.toFixed(0)}°</span></span>
-          </div>
         </div>
       </div>
 

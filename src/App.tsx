@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   type Flaps,
-  FLAP_SETTINGS,
   PRESETS,
   WEIGHT_N,
   solveFromPitchThrottleBank,
@@ -13,7 +12,7 @@ import { LoadFactorPanel } from './components/LoadFactorPanel';
 import { Readouts } from './components/Readouts';
 import { ForceBalance } from './components/ForceBalance';
 import { BankView } from './components/BankView';
-import { AttitudeControl } from './components/AttitudeControl';
+import { ControlConsole } from './components/ControlConsole';
 
 type Theme = 'auto' | 'light' | 'dark';
 
@@ -64,6 +63,7 @@ export default function App() {
   const [bank, setBank] = useState(DEFAULTS.bank);
   const [theme, setTheme] = useState<Theme>('auto');
   const [showAssumptions, setShowAssumptions] = useState(false);
+  const [consoleCollapsed, setConsoleCollapsed] = useState(false);
 
   function resetToDefaults() {
     setFlaps(DEFAULTS.flaps);
@@ -100,7 +100,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-app text-fg">
       {/* Body content — reserve space at bottom for sticky control bar */}
-      <div className="max-w-[1600px] mx-auto px-3 sm:px-5 py-3 pb-[280px]">
+      <div
+        className="max-w-[1600px] mx-auto px-3 sm:px-5 py-3"
+        style={{ paddingBottom: consoleCollapsed ? 96 : 268 }}
+      >
 
         {/* ─── Header — drafting frontispiece ─── */}
         <header className="mb-4 pb-3 border-b border-app">
@@ -229,156 +232,23 @@ export default function App() {
         </div>
       </div>
 
-      {/* ═══ BOTTOM: sticky control bar — drafting "instrument panel" ═══ */}
-      <div
-        className="fixed inset-x-0 bottom-0 z-40"
-        style={{
-          background: 'var(--bg-elev)',
-          borderTop: '1px solid var(--border-strong)',
-          boxShadow: '0 -2px 0 var(--rule), 0 -10px 24px -8px rgba(0,0,0,0.15)',
-        }}
-      >
-        {/* Title strip — like a drafting cartouche */}
-        <div
-          className="border-b border-app px-4 py-1 flex items-center justify-between"
-          style={{ background: 'var(--bg-soft)' }}
-        >
-          <span className="meta" style={{ fontSize: 8.5, letterSpacing: '0.24em' }}>
-            CONSOLE · PILOT INPUTS
-          </span>
-          <span className="meta" style={{ fontSize: 8.5, letterSpacing: '0.18em' }}>
-            STEP θ {2.5}° · φ {5}° · T {10} N
-          </span>
-        </div>
-
-        <div className="max-w-[1600px] mx-auto px-3 sm:px-5 py-3">
-          <div className="flex flex-wrap items-start gap-5 lg:gap-6">
-
-            {/* Attitude indicator (with bank presets + pitch tape) */}
-            <div className="flex flex-col items-center">
-              <span className="meta mb-1.5" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
-                ATTITUDE
-              </span>
-              <AttitudeControl
-                theta={theta}
-                bank={bank}
-                setTheta={setTheta}
-                setBank={setBank}
-              />
-            </div>
-
-            {/* Throttle */}
-            <div className="flex flex-col items-center">
-              <span className="meta mb-1.5" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
-                THROTTLE
-              </span>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min={0}
-                  max={MAX_THRUST}
-                  step={10}
-                  value={thrust}
-                  onChange={(e) => setThrust(Number(e.target.value))}
-                  className="vertical"
-                  style={{
-                    writingMode: 'vertical-lr' as React.CSSProperties['writingMode'],
-                    direction: 'rtl',
-                    height: 168,
-                    width: 24,
-                  }}
-                />
-                <div className="text-center min-w-[64px] border border-app p-1.5 bg-app">
-                  <div className="display-num text-3xl" style={{ color: 'var(--c-thrust)' }}>
-                    {throttlePct}
-                  </div>
-                  <div className="meta" style={{ fontSize: 7.5 }}>PERCENT</div>
-                  <div className="num text-[10px] text-fg-soft mt-1">{Math.round(thrust)} N</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Flaps */}
-            <div className="flex flex-col items-center">
-              <span className="meta mb-1.5" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
-                FLAPS
-              </span>
-              <div className="flex flex-col gap-px h-[168px] border border-app">
-                {[...FLAP_SETTINGS].reverse().map((f) => (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => setFlaps(f)}
-                    className={`btn flex-1 min-w-[60px] !border-0 ${f === flaps ? 'is-active' : ''}`}
-                    aria-pressed={f === flaps}
-                  >
-                    {f}°
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Live readout snapshot */}
-            <div className="flex items-stretch border border-app divide-x divide-[var(--border)] ml-auto bg-app">
-              <div className="px-3 py-2 text-center min-w-[72px]">
-                <div className="meta" style={{ fontSize: 8 }}>IAS</div>
-                <div className="display-num text-xl mt-0.5">{state.V_kts.toFixed(0)}</div>
-                <div className="text-[9px] text-fg-mute mt-0.5">kt</div>
-              </div>
-              <div className="px-3 py-2 text-center min-w-[68px]">
-                <div className="meta" style={{ fontSize: 8 }}>α</div>
-                <div className="display-num text-xl mt-0.5">{state.alpha.toFixed(1)}°</div>
-              </div>
-              <div className="px-3 py-2 text-center min-w-[68px]">
-                <div className="meta" style={{ fontSize: 8 }}>γ</div>
-                <div className="display-num text-xl mt-0.5">{state.gamma.toFixed(1)}°</div>
-              </div>
-              <div className="px-3 py-2 text-center min-w-[60px]">
-                <div className="meta" style={{ fontSize: 8 }}>n</div>
-                <div className="display-num text-xl mt-0.5" style={{ color: state.n > 1.5 ? 'var(--c-drag)' : 'var(--text)' }}>
-                  {state.n.toFixed(2)}
-                </div>
-              </div>
-              <div className={`px-3 py-2 text-center min-w-[96px] ${state.status === 'stalled' ? '' : ''}`} style={{ background: state.status === 'stalled' ? 'color-mix(in srgb, var(--c-weight) 22%, transparent)' : 'transparent' }}>
-                <div className="meta" style={{ fontSize: 8 }}>STATUS</div>
-                <div className="text-[11px] font-bold uppercase tracking-widest mt-1.5" style={{
-                  fontFamily: "'IBM Plex Sans Condensed', system-ui",
-                  color: state.status === 'stalled' ? 'var(--c-weight)' :
-                         state.status === 'near-stall' || state.status === 'pull-up' || state.status === 'unloaded' ? 'var(--c-drag)' :
-                         state.status === 'climbing' ? 'var(--c-thrust)' :
-                         'var(--text)',
-                }}>
-                  {state.status === 'pull-up' ? 'pull-up' :
-                   state.status === 'near-stall' ? 'near stall' :
-                   state.status}
-                </div>
-              </div>
-            </div>
-
-            {/* Scenario presets + reset */}
-            <div className="flex flex-col items-stretch gap-1.5 min-w-[200px]">
-              <span className="meta" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
-                SCENARIO
-              </span>
-              <div className="flex flex-wrap gap-px border border-app">
-                {PRESETS.map((p) => (
-                  <button
-                    key={p.name}
-                    type="button"
-                    onClick={() => applyPreset(p.name)}
-                    className="btn !border-0 flex-1 min-w-[88px] text-[10px] px-2"
-                  >
-                    {p.name}
-                  </button>
-                ))}
-              </div>
-              <button type="button" onClick={resetToDefaults} className="btn-ghost btn text-[10px] self-end">
-                ↺ reset
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* ═══ BOTTOM: collapsible sticky control console ═══ */}
+      <ControlConsole
+        collapsed={consoleCollapsed}
+        onToggle={() => setConsoleCollapsed((v) => !v)}
+        theta={theta}
+        bank={bank}
+        thrust={thrust}
+        flaps={flaps}
+        throttlePct={throttlePct}
+        state={state}
+        setTheta={setTheta}
+        setBank={setBank}
+        setThrust={setThrust}
+        setFlaps={setFlaps}
+        applyPreset={applyPreset}
+        resetToDefaults={resetToDefaults}
+      />
 
       <footer className="hidden">
         <span>Educational tool — not for flight planning.</span>

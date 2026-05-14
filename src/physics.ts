@@ -22,7 +22,10 @@ export interface FlapConfig {
 
 export const FLAP_CONFIGS: Record<Flaps, FlapConfig> = {
   0: { alphaZeroLift: -2, liftSlope: 0.1, alphaStall: 16, CLmax: 1.5, CD0: 0.027 },
-  10: { alphaZeroLift: -4, liftSlope: 0.1, alphaStall: 14, CLmax: 1.7, CD0: 0.045 },
+  // Flaps 10° on a C152: small extra camber, modest drag rise. Real-world
+  // ΔCD₀ ≈ 0.005–0.010 — the previous 0.045 (ΔCD₀ = 0.018) over-penalised
+  // partial flaps and pushed otherwise-survivable climbs into stall.
+  10: { alphaZeroLift: -4, liftSlope: 0.1, alphaStall: 14, CLmax: 1.7, CD0: 0.034 },
   30: { alphaZeroLift: -7, liftSlope: 0.1, alphaStall: 12, CLmax: 2.1, CD0: 0.085 },
 };
 
@@ -244,6 +247,14 @@ export function trimThrust(state: FlightState): number {
 //
 // At φ = 0 this reduces to wings-level steady flight. For φ > 0 the wing
 // has to produce L = W·cos γ / cos φ, raising CL and dropping V_stall.
+//
+// STALL HANDLING: if no pre-stall equilibrium exists for the chosen (θ, T, φ)
+// — typically because the pilot has over-pitched beyond what the engine can
+// support — we declare the wing stalled. The bisection runs in the pre-stall
+// band; on "no sign change" we exit that branch, set α = θ (γ ≈ 0 as a
+// transient stall geometry), and use stall airspeed Vs as a representative V.
+// `computeCL` then returns the post-stall CL automatically, and the resulting
+// L < W shows the lift collapse on the diagram.
 export function solveFromPitchThrottleBank(
   thetaDeg: number,
   thrust: number,
@@ -276,8 +287,14 @@ export function solveFromPitchThrottleBank(
   const rHigh = residual(gHigh);
 
   let gamma: number;
+  let stalled = false;
+
   if (rLow * rHigh > 0) {
-    gamma = Math.abs(rLow) < Math.abs(rHigh) ? gLow : gHigh;
+    // No pre-stall equilibrium — the airplane is over-pitched for the
+    // available thrust. Declare a transient stall: α follows θ (γ≈0), V
+    // collapses toward Vs. computeCL will return post-stall CL.
+    stalled = true;
+    gamma = 0;
   } else {
     gamma = (gLow + gHigh) / 2;
     for (let i = 0; i < 80; i++) {
@@ -292,7 +309,12 @@ export function solveFromPitchThrottleBank(
   const alpha = thetaDeg - gamma;
   const CL = computeCL(alpha, flaps);
   let V_kts: number;
-  if (CL <= 0) {
+
+  if (stalled) {
+    // Transient stall airspeed — drop slightly below Vs so the lift collapse
+    // is visible on the diagrams (L noticeably < W).
+    V_kts = 0.92 * stallSpeed(flaps, bankDeg);
+  } else if (CL <= 0) {
     V_kts = 130;
   } else {
     const cosG = Math.cos((gamma * Math.PI) / 180);

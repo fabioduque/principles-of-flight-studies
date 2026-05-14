@@ -3,89 +3,96 @@
 @tailwind utilities;
 
 /*
-   Drafting / blueprint aesthetic.
+   Drafting / blueprint aesthetic — refined for legibility.
+
    Light  — vellum drafting paper, sepia rules, navy ink, drafting-red callouts.
-   Dark   — Prussian blueprint, white linework, cyan accents.
-   Typography mixes a textbook serif (Fraunces) for figure titles, a condensed
-   technical sans (IBM Plex Sans Condensed) for chrome, and a precision mono
-   (JetBrains Mono) for all numerals.
+   Dark   — Prussian blueprint, white linework, warm amber accents.
+
+   Typography:
+   - Fraunces (italic, opsz axis) — figure-caption titles ONLY. Decorative.
+   - IBM Plex Sans Condensed — chrome labels, captions, status text.
+   - IBM Plex Mono — ALL technical numerals, force values, readouts. Bold and
+     legible by default; never used italic.
+
+   Color palette — publication-quality, muted but distinct. Avoids saturated
+   "Tailwind" hues. The four forces follow textbook convention: a dominant
+   blue lift, brick-red weight, pine-green thrust, copper drag.
 */
 
 :root {
   /* Vellum drafting paper */
-  --bg:         #e7dec3;   /* warm parchment field */
-  --bg-elev:    #f3ecd5;   /* paper plate */
-  --bg-soft:    #ddd2b3;   /* darker margin */
+  --bg:         #e7dec3;
+  --bg-elev:    #f3ecd5;
+  --bg-soft:    #ddd2b3;
   --bg-hover:   #d5c89f;
   --paper-tint: rgba(74, 51, 18, 0.04);
 
   --border:        #b69e6d;
   --border-strong: #806435;
-  --rule:          #56432a;   /* hairline drafting rules */
+  --rule:          #56432a;
 
-  --text:       #1a233c;     /* deep navy ink */
+  --text:       #14213d;      /* deep navy ink */
   --text-soft:  #3b4566;
   --text-mute:  #7a7458;
 
-  /* Drafting accent — printer's red, used sparingly */
-  --accent:     #b03423;
-  --accent-hover: #8c2818;
-  --accent-soft: rgba(176, 52, 35, 0.12);
+  /* Drafting accent — venetian red */
+  --accent:     #a52a2a;
+  --accent-hover: #861f1f;
+  --accent-soft: rgba(165, 42, 42, 0.10);
 
-  /* Force vector palette — semantic, muted to the paper feel */
-  --c-lift:     #1f3f8a;   /* navy/ink — the dominant force */
-  --c-weight:   #b03423;   /* drafting red */
-  --c-thrust:   #2f6b3b;   /* forest green */
-  --c-drag:     #a86b1f;   /* burnt sienna */
-  --c-magenta:  #7a2a6b;   /* aubergine */
-  --c-cg:       #c75a17;   /* terracotta */
+  /* Force vector palette — muted publication colors */
+  --c-lift:     #1f4287;   /* prussian — the dominant force */
+  --c-weight:   #a02828;   /* venetian red */
+  --c-thrust:   #2d6a4f;   /* pine */
+  --c-drag:     #b86e2c;   /* copper */
+  --c-magenta:  #6d1b7b;   /* wine */
+  --c-cg:       #c04a0c;   /* rust */
 
-  --grid-line:    rgba(31, 63, 138, 0.10);
-  --grid-strong:  rgba(31, 63, 138, 0.22);
+  --grid-line:    rgba(31, 66, 135, 0.09);
+  --grid-strong:  rgba(31, 66, 135, 0.20);
 
   --shadow-sm: 0 1px 0 rgba(86, 67, 42, 0.20);
-  --shadow:    0 2px 0 rgba(86, 67, 42, 0.25), 0 6px 18px -8px rgba(31, 35, 60, 0.20);
+  --shadow:    0 2px 0 rgba(86, 67, 42, 0.25), 0 6px 18px -8px rgba(20, 33, 61, 0.18);
 
-  /* Sky/ground tinting on diagrams */
-  --sky:        rgba(31, 63, 138, 0.05);
-  --ground:     rgba(168, 107, 31, 0.10);
+  --sky:        rgba(31, 66, 135, 0.05);
+  --ground:     rgba(184, 110, 44, 0.10);
 }
 
 .dark {
   /* Prussian blueprint */
   --bg:         #0a1733;
-  --bg-elev:    #102348;
-  --bg-soft:    #0c1c3d;
-  --bg-hover:   #163055;
+  --bg-elev:    #132849;
+  --bg-soft:    #0c1e3f;
+  --bg-hover:   #1a345f;
   --paper-tint: rgba(255, 255, 255, 0.025);
 
-  --border:        #2a4378;
-  --border-strong: #4b6ba8;
-  --rule:          #95b7e5;
+  --border:        #2c4377;
+  --border-strong: #4e6da6;
+  --rule:          #b9c8e3;
 
-  --text:       #e9eef9;
-  --text-soft:  #a8b9d8;
-  --text-mute:  #7287a8;
+  --text:       #f1f0e6;      /* paper-cream "white ink" */
+  --text-soft:  #c8cee0;
+  --text-mute:  #8094b8;
 
-  --accent:     #ffb454;        /* warm amber against blueprint */
-  --accent-hover: #ffce8a;
-  --accent-soft: rgba(255, 180, 84, 0.18);
+  --accent:     #f0a04b;        /* warm amber against blueprint */
+  --accent-hover: #ffba6e;
+  --accent-soft: rgba(240, 160, 75, 0.18);
 
-  --c-lift:     #82b4ff;
-  --c-weight:   #ff8c7a;
-  --c-thrust:   #7fd9a4;
-  --c-drag:     #ffc25c;
-  --c-magenta:  #f78bdb;
-  --c-cg:       #ffb454;
+  --c-lift:     #b6cffb;   /* paper-blue ink, calm */
+  --c-weight:   #ff8c6a;   /* coral-red, warm not pink */
+  --c-thrust:   #9bd5a0;   /* sage */
+  --c-drag:     #f3c47a;   /* warm sand */
+  --c-magenta:  #d9a8e8;   /* dusty lilac */
+  --c-cg:       #ffaa66;   /* warm orange */
 
-  --grid-line:    rgba(255, 255, 255, 0.07);
-  --grid-strong:  rgba(255, 255, 255, 0.18);
+  --grid-line:    rgba(255, 255, 255, 0.06);
+  --grid-strong:  rgba(255, 255, 255, 0.16);
 
   --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.45);
   --shadow:    0 2px 0 rgba(0, 0, 0, 0.5), 0 14px 32px -10px rgba(0, 0, 0, 0.7);
 
-  --sky:        rgba(130, 180, 255, 0.06);
-  --ground:     rgba(255, 194, 92, 0.05);
+  --sky:        rgba(182, 207, 251, 0.05);
+  --ground:     rgba(243, 196, 122, 0.04);
 }
 
 @layer base {
@@ -99,7 +106,6 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     min-height: 100vh;
-    /* paper texture: subtle noise + fibers */
     background-image:
       radial-gradient(circle at 20% 30%, var(--paper-tint), transparent 40%),
       radial-gradient(circle at 80% 70%, var(--paper-tint), transparent 50%),
@@ -111,7 +117,7 @@
     color: var(--text);
     letter-spacing: -0.02em;
     font-weight: 600;
-    font-variation-settings: 'SOFT' 30, 'WONK' 0, 'opsz' 144;
+    font-variation-settings: 'SOFT' 30, 'opsz' 144;
   }
 
   ::selection {
@@ -130,7 +136,7 @@
 
 @layer components {
 
-  /* ─── Paper plate (card) — drafting style, hairline ruled, slight tactile shadow ─── */
+  /* ─── Paper plate (card) — drafting style ─── */
   .card {
     background: var(--bg-elev);
     border: 1px solid var(--border);
@@ -138,7 +144,6 @@
     box-shadow: var(--shadow-sm);
     position: relative;
   }
-  /* Tiny register/corner mark in each corner — a drafting-paper detail */
   .card::before, .card::after {
     content: '';
     position: absolute;
@@ -162,20 +167,19 @@
   }
   .card-header-title {
     font-family: 'Fraunces', Georgia, serif;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text);
     letter-spacing: -0.01em;
-    font-variation-settings: 'SOFT' 30, 'WONK' 0, 'opsz' 32;
+    font-variation-settings: 'SOFT' 30, 'opsz' 32;
     font-style: italic;
   }
   .card-header-aside {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
     color: var(--text-soft);
     font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.02em;
   }
 
   /* ─── Stamp / figure caption ─── */
@@ -195,7 +199,7 @@
     border-radius: 0;
   }
   .stamp-num {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'IBM Plex Mono', monospace;
     color: var(--accent);
     font-weight: 600;
   }
@@ -203,36 +207,36 @@
   /* ─── Meta caption ─── */
   .meta {
     font-family: 'IBM Plex Sans Condensed', system-ui, sans-serif;
-    font-size: 0.66rem;
+    font-size: 0.7rem;
     color: var(--text-soft);
-    letter-spacing: 0.12em;
+    letter-spacing: 0.11em;
     text-transform: uppercase;
     font-weight: 600;
   }
 
-  /* ─── Numeric readout ─── */
+  /* ─── Technical numeric readout (default everywhere) ─── */
   .num {
-    font-family: 'JetBrains Mono', monospace;
-    font-feature-settings: 'tnum' 1, 'zero' 1, 'ss01' 1;
+    font-family: 'IBM Plex Mono', monospace;
+    font-feature-settings: 'tnum' 1, 'zero' 1, 'ss01' 0;
     font-weight: 500;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
   }
 
+  /* Big readouts — same mono family, bold, generous tracking */
   .display-num {
-    font-family: 'Fraunces', Georgia, serif;
-    font-variation-settings: 'SOFT' 20, 'WONK' 1, 'opsz' 144;
+    font-family: 'IBM Plex Mono', monospace;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
     font-weight: 600;
-    letter-spacing: -0.04em;
-    font-feature-settings: 'tnum' 1;
+    letter-spacing: -0.01em;
   }
 
   /* ─── Buttons ─── */
   .btn {
     font-family: 'IBM Plex Sans Condensed', system-ui, sans-serif;
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: 500;
-    letter-spacing: 0.02em;
-    padding: 0.4rem 0.75rem;
+    letter-spacing: 0.03em;
+    padding: 0.42rem 0.78rem;
     background: var(--bg-elev);
     color: var(--text);
     border: 1px solid var(--border);
@@ -274,13 +278,13 @@
     border-color: var(--accent);
   }
 
-  /* Compact pill — for theme switcher etc. */
+  /* Compact pill */
   .pill {
     font-family: 'IBM Plex Sans Condensed', system-ui, sans-serif;
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     font-weight: 600;
     letter-spacing: 0.08em;
-    padding: 0.3rem 0.7rem;
+    padding: 0.3rem 0.72rem;
     background: var(--bg-elev);
     color: var(--text-soft);
     border: 1px solid var(--border);
@@ -347,25 +351,18 @@
     outline-offset: 2px;
   }
 
-  /* ─── Drafting grid background ─── */
+  /* ─── Drafting grid ─── */
   .grid-bg {
     background-color: var(--bg-elev);
     background-image:
-      /* Major rules every 80px */
       linear-gradient(var(--grid-strong) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px),
-      /* Minor rules every 16px */
       linear-gradient(var(--grid-line) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size:
-      80px 80px,
-      80px 80px,
-      16px 16px,
-      16px 16px;
-    background-position: 0 0, 0 0, 0 0, 0 0;
+    background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+    background-position: 0 0;
   }
 
-  /* Sky/ground tint on diagram panels (subtle horizon hint) */
   .horizon-bg {
     background-color: var(--bg-elev);
     background-image:
@@ -374,12 +371,7 @@
       linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px),
       linear-gradient(var(--grid-line) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size:
-      100% 100%,
-      80px 80px,
-      80px 80px,
-      16px 16px,
-      16px 16px;
+    background-size: 100% 100%, 80px 80px, 80px 80px, 16px 16px, 16px 16px;
   }
 }
 
@@ -399,4 +391,5 @@
   .border-app      { border-color: var(--border); }
   .border-rule     { border-color: var(--rule); }
   .font-display    { font-family: 'Fraunces', Georgia, serif; }
+  .font-mono-tech  { font-family: 'IBM Plex Mono', monospace; }
 }

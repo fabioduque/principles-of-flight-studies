@@ -7,7 +7,7 @@ export default {
       fontFamily: {
         sans: ['"IBM Plex Sans Condensed"', 'system-ui', 'sans-serif'],
         display: ['"Fraunces"', 'Georgia', 'serif'],
-        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
       },
     },
   },
