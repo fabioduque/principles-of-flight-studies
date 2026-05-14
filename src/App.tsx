@@ -65,10 +65,8 @@ export default function App() {
   const [thrust, setThrust] = useState(DEFAULTS.thrust);
   const [bank, setBank] = useState(DEFAULTS.bank);
   const [theme, setTheme] = useState<Theme>('auto');
-  const [lang, setLang] = useState<Lang>(() => {
-    if (typeof navigator !== 'undefined' && /^pt/i.test(navigator.language || '')) return 'pt';
-    return 'en';
-  });
+  // Default to English; user picks PT manually from the header toggle.
+  const [lang, setLang] = useState<Lang>('en');
   const t = translations[lang];
   const [showAssumptions, setShowAssumptions] = useState(false);
   const [userCollapsed, setUserCollapsed] = useState(false);
