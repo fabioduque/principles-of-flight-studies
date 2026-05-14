@@ -72,12 +72,26 @@ export default function App() {
   const [showAssumptions, setShowAssumptions] = useState(false);
   const [userCollapsed, setUserCollapsed] = useState(false);
   const [openModalCount, setOpenModalCount] = useState(0);
+  // Mobile viewport detection — under 640 px the expanded console doesn't fit
+  // (~810 px of horizontal content), and phones can't drive keyboard piloting
+  // anyway. Force-collapse below this breakpoint and hide the toggle.
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches,
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 640px)');
+    const onChange = () => setIsMobile(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
   // While ANY chart is fullscreen we force-collapse the pilot console so
   // the student can still see live state and keep flying with the keyboard
   // under the modal. The user's last manual choice is restored automatically
   // when the modal closes (because consoleCollapsed is derived, not stored).
-  const consoleCollapsed = userCollapsed || openModalCount > 0;
+  const consoleCollapsed = userCollapsed || openModalCount > 0 || isMobile;
   const setConsoleCollapsed = setUserCollapsed;
+  const canToggleConsole = !isMobile && openModalCount === 0;
   const [keyboardMode, setKeyboardMode] = useState(false);
   // Tracks consecutive keystrokes that aren't bound to anything while keyboard
   // piloting is on. After two unbound key presses we surface a one-shot toast
@@ -454,6 +468,8 @@ export default function App() {
       <ControlConsole
         collapsed={consoleCollapsed}
         onToggle={() => setConsoleCollapsed((v) => !v)}
+        canToggle={canToggleConsole}
+        isMobile={isMobile}
         keyboardMode={keyboardMode}
         setKeyboardMode={setKeyboardMode}
         theta={theta}

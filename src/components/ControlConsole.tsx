@@ -26,6 +26,13 @@ const BANK_STEP = 5;
 interface Props {
   collapsed: boolean;
   onToggle: () => void;
+  /** Hides the EXPAND/COLLAPSE button when false — used to lock collapsed
+   *  state on mobile (no room for the expanded grid) and while a chart
+   *  modal is open (console is force-collapsed underneath). */
+  canToggle: boolean;
+  /** Suppresses keyboard-related affordances (KBD toggle, key labels) on
+   *  small viewports where there's no physical keyboard. */
+  isMobile: boolean;
   keyboardMode: boolean;
   setKeyboardMode: (v: boolean | ((prev: boolean) => boolean)) => void;
   theta: number;
@@ -216,7 +223,8 @@ function InlineNudge({
 // ════════════════════════════════════════════════════════════════════════
 export function ControlConsole(props: Props) {
   const {
-    collapsed, onToggle, keyboardMode, setKeyboardMode,
+    collapsed, onToggle, canToggle, isMobile,
+    keyboardMode, setKeyboardMode,
     theta, bank, thrust, flaps, throttlePct, state,
     setTheta, setBank, setThrust, setFlaps,
     applyPreset, resetToDefaults,
@@ -270,60 +278,68 @@ export function ControlConsole(props: Props) {
           >
             {statusLabel}
           </span>
-          <button
-            type="button"
-            onClick={() => setKeyboardMode((v) => !v)}
-            className={`btn px-3 py-1.5 text-[11px] flex items-center gap-2 ${keyboardMode ? 'is-active' : ''}`}
-            aria-pressed={keyboardMode}
-            title={keyboardMode ? 'Disable keyboard control' : 'Enable keyboard control'}
-            style={keyboardMode ? {
-              background: 'var(--accent)',
-              borderColor: 'var(--accent)',
-              color: 'var(--bg-elev)',
-            } : undefined}
-          >
-            {/* K key cap — makes the keyboard shortcut visible at a glance */}
-            <span
-              style={{
-                fontFamily: "'IBM Plex Mono', monospace",
-                fontWeight: 700,
-                fontSize: 11,
-                padding: '0 5px',
-                minWidth: 18,
-                height: 16,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid currentColor',
-                borderBottomWidth: 2,
-                lineHeight: 1,
-              }}
+          {/* KEYBOARD toggle — only visible on devices that have a keyboard.
+              On phones it's noise. */}
+          {!isMobile && (
+            <button
+              type="button"
+              onClick={() => setKeyboardMode((v) => !v)}
+              className={`btn px-3 py-1.5 text-[11px] flex items-center gap-2 ${keyboardMode ? 'is-active' : ''}`}
+              aria-pressed={keyboardMode}
+              title={keyboardMode ? 'Disable keyboard control' : 'Enable keyboard control'}
+              style={keyboardMode ? {
+                background: 'var(--accent)',
+                borderColor: 'var(--accent)',
+                color: 'var(--bg-elev)',
+              } : undefined}
             >
-              K
-            </span>
-            <span className="font-semibold tracking-wider">{t.keyboard}</span>
-            <span
-              className="inline-block w-1.5 h-1.5 rounded-full"
-              style={{
-                background: keyboardMode ? 'var(--bg-elev)' : 'var(--text-mute)',
-                boxShadow: keyboardMode
-                  ? '0 0 0 2px color-mix(in srgb, var(--bg-elev) 30%, transparent)'
-                  : undefined,
-                animation: keyboardMode ? 'pulse 1.6s ease-in-out infinite' : undefined,
-              }}
-            />
-          </button>
-          <button
-            type="button"
-            onClick={onToggle}
-            className="btn px-3 py-1 text-[10px] flex items-center gap-1"
-            aria-expanded={!collapsed}
-            aria-label={collapsed ? 'Expand console' : 'Collapse console'}
-            title={collapsed ? 'Expand console' : 'Collapse console'}
-          >
-            <span className="font-semibold">{collapsed ? t.expand : t.collapse}</span>
-            <span className="text-base leading-none">{collapsed ? '▴' : '▾'}</span>
-          </button>
+              {/* K key cap — makes the keyboard shortcut visible at a glance */}
+              <span
+                style={{
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontWeight: 700,
+                  fontSize: 11,
+                  padding: '0 5px',
+                  minWidth: 18,
+                  height: 16,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid currentColor',
+                  borderBottomWidth: 2,
+                  lineHeight: 1,
+                }}
+              >
+                K
+              </span>
+              <span className="font-semibold tracking-wider">{t.keyboard}</span>
+              <span
+                className="inline-block w-1.5 h-1.5 rounded-full"
+                style={{
+                  background: keyboardMode ? 'var(--bg-elev)' : 'var(--text-mute)',
+                  boxShadow: keyboardMode
+                    ? '0 0 0 2px color-mix(in srgb, var(--bg-elev) 30%, transparent)'
+                    : undefined,
+                  animation: keyboardMode ? 'pulse 1.6s ease-in-out infinite' : undefined,
+                }}
+              />
+            </button>
+          )}
+          {/* EXPAND/COLLAPSE — hidden when caller can't toggle (mobile,
+              fullscreen modal open). */}
+          {canToggle && (
+            <button
+              type="button"
+              onClick={onToggle}
+              className="btn px-3 py-1 text-[10px] flex items-center gap-1"
+              aria-expanded={!collapsed}
+              aria-label={collapsed ? 'Expand console' : 'Collapse console'}
+              title={collapsed ? 'Expand console' : 'Collapse console'}
+            >
+              <span className="font-semibold">{collapsed ? t.expand : t.collapse}</span>
+              <span className="text-base leading-none">{collapsed ? '▴' : '▾'}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -391,27 +407,27 @@ export function ControlConsole(props: Props) {
               </div>
             </div>
 
-            {/* Compact readouts */}
-            <div className="flex items-center border border-app divide-x divide-[var(--border)] bg-app ml-auto">
-              <div className="px-2 py-1 text-center min-w-[56px]">
+            {/* Compact readouts — cells shrink on phone to fit 360 px wraps. */}
+            <div className="flex items-center border border-app divide-x divide-[var(--border)] bg-app sm:ml-auto">
+              <div className="px-1.5 sm:px-2 py-1 text-center min-w-[44px] sm:min-w-[56px]">
                 <div className="meta" style={{ fontSize: 7.5 }}>IAS</div>
                 <div className="num text-sm font-semibold">{state.V_kts.toFixed(0)}<span className="text-[8px] text-fg-mute ml-0.5">kt</span></div>
               </div>
-              <div className="px-2 py-1 text-center min-w-[52px]">
+              <div className="px-1.5 sm:px-2 py-1 text-center min-w-[42px] sm:min-w-[52px]">
                 <div className="meta" style={{ fontSize: 7.5 }}>α</div>
                 <div className="num text-sm font-semibold">{state.alpha.toFixed(1)}°</div>
               </div>
-              <div className="px-2 py-1 text-center min-w-[52px]">
+              <div className="px-1.5 sm:px-2 py-1 text-center min-w-[42px] sm:min-w-[52px]">
                 <div className="meta" style={{ fontSize: 7.5 }}>γ</div>
                 <div className="num text-sm font-semibold">{state.gamma.toFixed(1)}°</div>
               </div>
-              <div className="px-2 py-1 text-center min-w-[48px]">
+              <div className="px-1.5 sm:px-2 py-1 text-center min-w-[40px] sm:min-w-[48px]">
                 <div className="meta" style={{ fontSize: 7.5 }}>n</div>
                 <div className="num text-sm font-semibold" style={{ color: state.n > 1.5 ? 'var(--c-drag)' : 'var(--text)' }}>
                   {state.n.toFixed(2)}
                 </div>
               </div>
-              <div className="px-2 py-1 text-center min-w-[60px]" style={{ background: statBg }}>
+              <div className="px-1.5 sm:px-2 py-1 text-center min-w-[56px] sm:min-w-[60px]" style={{ background: statBg }}>
                 <div className="meta" style={{ fontSize: 7.5 }}>{t.status}</div>
                 <div
                   className="text-[10px] font-semibold uppercase"
