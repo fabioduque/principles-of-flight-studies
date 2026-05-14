@@ -255,6 +255,35 @@ export function BankView({ state }: Props) {
         </g>
       )}
 
+      {/* Stalled stamp — top-right */}
+      {state.status === 'stalled' && (
+        <g>
+          <rect
+            x={80}
+            y={-195}
+            width={130}
+            height={26}
+            fill="var(--c-weight)"
+            stroke="var(--bg-elev)"
+            strokeWidth={1.5}
+          >
+            <animate attributeName="opacity" values="1;0.5;1" dur="1.4s" repeatCount="indefinite" />
+          </rect>
+          <text
+            x={145}
+            y={-177}
+            textAnchor="middle"
+            fill="var(--bg-elev)"
+            fontSize={13}
+            fontFamily="'IBM Plex Sans Condensed', system-ui"
+            fontWeight={700}
+            letterSpacing="0.22em"
+          >
+            ⚠ STALLED
+          </text>
+        </g>
+      )}
+
       {/* ── Title block (top-left) ── */}
       <g>
         <rect x={-215} y={-195} width={150} height={56} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.8} />

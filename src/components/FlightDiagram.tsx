@@ -403,6 +403,35 @@ export function FlightDiagram({ state }: Props) {
         ariaLabel={`Drag ${Math.round(D)} newtons, opposite to flight path`}
       />
 
+      {/* Stalled stamp — top-right of the SVG */}
+      {state.status === 'stalled' && (
+        <g>
+          <rect
+            x={232}
+            y={-238}
+            width={130}
+            height={26}
+            fill="var(--c-weight)"
+            stroke="var(--bg-elev)"
+            strokeWidth={1.5}
+          >
+            <animate attributeName="opacity" values="1;0.5;1" dur="1.4s" repeatCount="indefinite" />
+          </rect>
+          <text
+            x={297}
+            y={-220}
+            textAnchor="middle"
+            fill="var(--bg-elev)"
+            fontSize={13}
+            fontFamily="'IBM Plex Sans Condensed', system-ui"
+            fontWeight={700}
+            letterSpacing="0.22em"
+          >
+            ⚠ STALLED
+          </text>
+        </g>
+      )}
+
       {/* Title block */}
       <g>
         <rect x={196} y={120} width={170} height={42} fill="var(--bg-elev)" stroke="var(--rule)" strokeWidth={0.8} />

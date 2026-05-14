@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import type { Flaps } from '../physics';
 import { FLAP_CONFIGS, FLAP_SETTINGS, sampleCLCurve } from '../physics';
+import { StallStamp } from './StallStamp';
 
 interface Props {
   activeFlaps: Flaps;
@@ -18,6 +19,7 @@ interface Props {
   CL: number;
   // In Simple mode we hide the other flap curves entirely.
   showAllFlapCurves: boolean;
+  stalled?: boolean;
 }
 
 const FLAP_STYLES: Record<Flaps, { dashArray: string; color: string; styleLabel: string }> = {
@@ -26,7 +28,7 @@ const FLAP_STYLES: Record<Flaps, { dashArray: string; color: string; styleLabel:
   30: { dashArray: '2 4', color: 'var(--c-drag)', styleLabel: 'dotted' },
 };
 
-export function CLChart({ activeFlaps, alpha, CL, showAllFlapCurves }: Props) {
+export function CLChart({ activeFlaps, alpha, CL, showAllFlapCurves, stalled }: Props) {
   // Build a single dataset where each row has α plus CL_0, CL_10, CL_30 values.
   const merged: Record<string, number>[] = [];
   const sampled = FLAP_SETTINGS.map((f) => sampleCLCurve(f));
@@ -55,7 +57,8 @@ export function CLChart({ activeFlaps, alpha, CL, showAllFlapCurves }: Props) {
         </p>
       </header>
 
-      <div className="h-80 grid-bg border border-app" role="img" aria-label="Lift coefficient curves for flaps 0, 10, and 30 degrees">
+      <div className="h-80 grid-bg border border-app relative" role="img" aria-label="Lift coefficient curves for flaps 0, 10, and 30 degrees">
+        {stalled && <StallStamp />}
         <ResponsiveContainer>
           <LineChart data={merged} margin={{ top: 8, right: 12, left: 0, bottom: 18 }}>
             <CartesianGrid stroke="currentColor" strokeOpacity={0.1} />

@@ -25,6 +25,8 @@ const BANK_STEP = 5;
 interface Props {
   collapsed: boolean;
   onToggle: () => void;
+  keyboardMode: boolean;
+  setKeyboardMode: (v: boolean | ((prev: boolean) => boolean)) => void;
   theta: number;
   bank: number;
   thrust: number;
@@ -38,6 +40,107 @@ interface Props {
   applyPreset: (name: string) => void;
   resetToDefaults: () => void;
 }
+
+// Simple keyboard icon, drawn inline so it inherits currentColor for theme.
+function KeyboardIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size * 0.7}
+      viewBox="0 0 22 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.4}
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="1" y="1.5" width="20" height="11" rx="1.5" />
+      <line x1="4" y1="5" x2="4.5" y2="5" />
+      <line x1="7" y1="5" x2="7.5" y2="5" />
+      <line x1="10" y1="5" x2="10.5" y2="5" />
+      <line x1="13" y1="5" x2="13.5" y2="5" />
+      <line x1="16" y1="5" x2="16.5" y2="5" />
+      <line x1="19" y1="5" x2="19.5" y2="5" />
+      <line x1="4" y1="8" x2="4.5" y2="8" />
+      <line x1="7" y1="8" x2="7.5" y2="8" />
+      <line x1="10" y1="8" x2="10.5" y2="8" />
+      <line x1="13" y1="8" x2="13.5" y2="8" />
+      <line x1="16" y1="8" x2="19.5" y2="8" />
+      <rect x="7" y="10.5" width="8" height="0.6" rx="0.3" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+// Throttle key badge — sits above and below the slider showing the bound
+// key plus a prominent sign for the action direction. Always rendered;
+// opacity transitions between dim and full when keyboard mode toggles.
+function ThrottleKeyBadge({ k, sign, active }: { k: string; sign: string; active: boolean }) {
+  return (
+    <div
+      className="flex items-center justify-center gap-1 select-none transition-opacity"
+      style={{
+        opacity: active ? 1 : 0.28,
+        transition: 'opacity 0.25s ease',
+        background: 'var(--bg-elev)',
+        border: '1px solid var(--accent)',
+        borderBottomWidth: 2,
+        padding: '1px 5px',
+        minWidth: 36,
+      }}
+    >
+      <span
+        style={{
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontWeight: 700,
+          fontSize: 11,
+          color: 'var(--accent)',
+          lineHeight: 1,
+        }}
+      >
+        {k}
+      </span>
+      <span
+        style={{
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontWeight: 700,
+          fontSize: 15,
+          color: 'var(--accent)',
+          lineHeight: 1,
+          marginLeft: 2,
+        }}
+      >
+        {sign}
+      </span>
+    </div>
+  );
+}
+
+// Single key cap rendered drafting-style — paper background, hairline rule.
+function Kbd({ children, size = 'sm' }: { children: React.ReactNode; size?: 'sm' | 'md' }) {
+  const dim = size === 'md'
+    ? { px: '0.4rem', minW: 22, h: 22, fs: 11 }
+    : { px: '0.32rem', minW: 18, h: 18, fs: 10 };
+  return (
+    <span
+      className="inline-flex items-center justify-center font-semibold"
+      style={{
+        fontFamily: "'IBM Plex Mono', monospace",
+        background: 'var(--bg-elev)',
+        color: 'var(--text)',
+        border: '1px solid var(--rule)',
+        borderBottomWidth: 2,
+        lineHeight: 1,
+        padding: `0 ${dim.px}`,
+        minWidth: dim.minW,
+        height: dim.h,
+        fontSize: dim.fs,
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
 
 function statusColor(status: FlightState['status']): string {
   switch (status) {
@@ -147,7 +250,7 @@ function InlineNudge({
 // ════════════════════════════════════════════════════════════════════════
 export function ControlConsole(props: Props) {
   const {
-    collapsed, onToggle,
+    collapsed, onToggle, keyboardMode, setKeyboardMode,
     theta, bank, thrust, flaps, throttlePct, state,
     setTheta, setBank, setThrust, setFlaps,
     applyPreset, resetToDefaults,
@@ -167,11 +270,14 @@ export function ControlConsole(props: Props) {
       className="fixed inset-x-0 bottom-0 z-40"
       style={{
         background: 'var(--bg-elev)',
-        borderTop: '1px solid var(--border-strong)',
-        boxShadow: '0 -2px 0 var(--rule), 0 -10px 24px -8px rgba(0,0,0,0.15)',
+        borderTop: keyboardMode ? '2px solid var(--accent)' : '1px solid var(--border-strong)',
+        boxShadow: keyboardMode
+          ? '0 -2px 0 var(--accent), 0 -10px 24px -8px rgba(0,0,0,0.18)'
+          : '0 -2px 0 var(--rule), 0 -10px 24px -8px rgba(0,0,0,0.15)',
+        transition: 'border-color 0.15s, box-shadow 0.15s',
       }}
     >
-      {/* ── Cartouche / title strip with collapse toggle ── */}
+      {/* ── Cartouche / title strip ── */}
       <div
         className="border-b border-app px-3 sm:px-4 py-1 flex items-center justify-between gap-3"
         style={{ background: 'var(--bg-soft)' }}
@@ -198,6 +304,31 @@ export function ControlConsole(props: Props) {
           </span>
           <button
             type="button"
+            onClick={() => setKeyboardMode((v) => !v)}
+            className={`btn px-3 py-1.5 text-[11px] flex items-center gap-2 ${keyboardMode ? 'is-active' : ''}`}
+            aria-pressed={keyboardMode}
+            title={keyboardMode ? 'Disable keyboard control' : 'Enable keyboard control'}
+            style={keyboardMode ? {
+              background: 'var(--accent)',
+              borderColor: 'var(--accent)',
+              color: 'var(--bg-elev)',
+            } : undefined}
+          >
+            <KeyboardIcon size={16} />
+            <span className="font-semibold tracking-wider">KEYBOARD</span>
+            <span
+              className="inline-block w-1.5 h-1.5 rounded-full"
+              style={{
+                background: keyboardMode ? 'var(--bg-elev)' : 'var(--text-mute)',
+                boxShadow: keyboardMode
+                  ? '0 0 0 2px color-mix(in srgb, var(--bg-elev) 30%, transparent)'
+                  : undefined,
+                animation: keyboardMode ? 'pulse 1.6s ease-in-out infinite' : undefined,
+              }}
+            />
+          </button>
+          <button
+            type="button"
             onClick={onToggle}
             className="btn px-3 py-1 text-[10px] flex items-center gap-1"
             aria-expanded={!collapsed}
@@ -209,6 +340,7 @@ export function ControlConsole(props: Props) {
           </button>
         </div>
       </div>
+
 
       {/* ─────────────────────────── COLLAPSED VIEW ─────────────────────── */}
       {collapsed && (
@@ -313,15 +445,42 @@ export function ControlConsole(props: Props) {
           <div className="grid grid-cols-12 gap-3 lg:gap-4 items-start">
 
             {/* LEFT — attitude indicator with presets ────────────────── */}
-            <div className="col-span-12 md:col-span-6 lg:col-span-5 xl:col-span-5 flex flex-col items-center">
-              <span className="meta mb-1" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
-                ATTITUDE
-              </span>
+            <div className="col-span-12 md:col-span-6 lg:col-span-5 xl:col-span-5 flex flex-col items-center gap-2">
+              <div className="flex items-center gap-3">
+                <span className="meta" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
+                  ATTITUDE
+                </span>
+                {/* Always-visible keyboard toggle hint — press K from anywhere */}
+                <button
+                  type="button"
+                  onClick={() => setKeyboardMode((v) => !v)}
+                  className="flex items-center gap-1.5 px-1.5 py-0.5 border border-app hover:bg-soft transition-colors"
+                  style={{
+                    background: keyboardMode ? 'var(--accent-soft)' : 'transparent',
+                    borderColor: keyboardMode ? 'var(--accent)' : 'var(--border)',
+                  }}
+                  title={keyboardMode ? 'Press K to disable keyboard' : 'Press K to enable keyboard'}
+                  aria-pressed={keyboardMode}
+                >
+                  <Kbd size="sm">K</Kbd>
+                  <span
+                    className="meta"
+                    style={{
+                      fontSize: 8.5,
+                      letterSpacing: '0.10em',
+                      color: keyboardMode ? 'var(--accent)' : 'var(--text-soft)',
+                    }}
+                  >
+                    {keyboardMode ? 'KEYBOARD ON' : 'KEYBOARD OFF'}
+                  </span>
+                </button>
+              </div>
               <AttitudeControl
                 theta={theta}
                 bank={bank}
                 setTheta={setTheta}
                 setBank={setBank}
+                keyboardMode={keyboardMode}
               />
             </div>
 
@@ -333,20 +492,27 @@ export function ControlConsole(props: Props) {
                   THROTTLE
                 </span>
                 <div className="flex items-stretch gap-2">
-                  <input
-                    type="range"
-                    min={0}
-                    max={MAX_THRUST}
-                    step={10}
-                    value={thrust}
-                    onChange={(e) => setThrust(Number(e.target.value))}
-                    style={{
-                      writingMode: 'vertical-lr' as React.CSSProperties['writingMode'],
-                      direction: 'rtl',
-                      height: 168,
-                      width: 22,
-                    }}
-                  />
+                  {/* Slider column with R+ above and F- below.
+                      Badges are always rendered (no layout shift) — opacity
+                      fades from dim to accent when keyboard mode toggles. */}
+                  <div className="flex flex-col items-center gap-1">
+                    <ThrottleKeyBadge k="R" sign="+" active={keyboardMode} />
+                    <input
+                      type="range"
+                      min={0}
+                      max={MAX_THRUST}
+                      step={10}
+                      value={thrust}
+                      onChange={(e) => setThrust(Number(e.target.value))}
+                      style={{
+                        writingMode: 'vertical-lr' as React.CSSProperties['writingMode'],
+                        direction: 'rtl',
+                        height: 152,
+                        width: 22,
+                      }}
+                    />
+                    <ThrottleKeyBadge k="F" sign="−" active={keyboardMode} />
+                  </div>
                   <div className="text-center min-w-[64px] border border-app p-1.5 bg-app flex flex-col justify-center">
                     <div className="display-num text-2xl leading-none" style={{ color: 'var(--c-thrust)' }}>
                       {throttlePct}
@@ -364,7 +530,7 @@ export function ControlConsole(props: Props) {
                 <span className="meta mb-1" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
                   FLAPS
                 </span>
-                <div className="flex flex-col gap-px h-[168px] border border-app">
+                <div className="flex flex-col gap-px h-[204px] border border-app">
                   {[...FLAP_SETTINGS].reverse().map((f) => (
                     <button
                       key={f}

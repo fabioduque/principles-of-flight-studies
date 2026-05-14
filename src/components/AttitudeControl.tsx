@@ -16,6 +16,37 @@ interface Props {
   pitchMax?: number;
   bankMax?: number;
   size?: number;
+  /** When true, render key-cap hints next to each nudge direction. */
+  keyboardMode?: boolean;
+}
+
+// Accent-bordered keycap badge under each nudge button — same visual
+// language as the throttle's R+/F− badges. Always rendered (reserves
+// vertical space) so toggling keyboard mode never shifts the layout;
+// only its opacity transitions from dim to full.
+function NudgeKeyBadge({ text, active }: { text: string; active: boolean }) {
+  return (
+    <div
+      className="flex items-center justify-center select-none transition-opacity"
+      style={{
+        opacity: active ? 1 : 0.28,
+        transition: 'opacity 0.25s ease',
+        background: 'var(--bg-elev)',
+        border: '1px solid var(--accent)',
+        borderBottomWidth: 2,
+        padding: '1px 6px',
+        fontFamily: "'IBM Plex Mono', monospace",
+        fontWeight: 700,
+        fontSize: 11,
+        color: 'var(--accent)',
+        lineHeight: 1,
+        letterSpacing: '0.08em',
+        minWidth: 30,
+      }}
+    >
+      {text}
+    </div>
+  );
 }
 
 function clamp(v: number, lo: number, hi: number) {
@@ -32,10 +63,12 @@ const VIEW_R = 110;
 const INNER_R = 92;
 const PITCH_PX_PER_DEG = 4;
 
-const SKY = '#1f3f8a';
-const SKY_LIGHT = '#3a6cd0';
-const GROUND = '#7a4a1d';
-const GROUND_LIGHT = '#a86b1f';
+// Muted "blueprint sky" — desaturated steel-slate gradient. Reads as
+// atmospheric and drafted, not as a saturated gauge sky.
+const SKY = '#3a536e';        // deeper muted slate (top of dome)
+const SKY_LIGHT = '#6b88a4';  // lighter muted slate (near horizon)
+const GROUND = '#6e4a25';     // earth, slightly desaturated to match
+const GROUND_LIGHT = '#94693a';
 const HORIZON_LINE = '#f3ecd5';
 const SYMBOL = '#ffb454';
 const SCALE = '#f3ecd5';
@@ -53,6 +86,7 @@ export function AttitudeControl({
   pitchMax = 30,
   bankMax = 75,
   size = 168,
+  keyboardMode = false,
 }: Props) {
   const ref = useRef<SVGSVGElement>(null);
 
@@ -116,27 +150,69 @@ export function AttitudeControl({
         <div className="meta" style={{ fontSize: 8.5, letterSpacing: '0.22em' }}>
           NUDGE
         </div>
-        <div className="grid grid-cols-3 grid-rows-3 gap-0.5">
-          <span />
-          <button type="button" onClick={() => nudgePitch(-PITCH_STEP)}
-            className="btn px-2 py-0.5 text-xs"
-            title={`pitch −${PITCH_STEP}°`} aria-label="pitch down">▲</button>
-          <span />
-          <button type="button" onClick={() => nudgeBank(-BANK_STEP)}
-            className="btn px-2 py-0.5 text-xs"
-            title={`bank −${BANK_STEP}°`} aria-label="bank left">◀</button>
-          <button type="button" onClick={() => { setTheta(0); setBank(0); }}
-            className="btn-ghost btn px-2 py-0.5 text-[10px]"
-            title="centre" aria-label="centre">●</button>
-          <button type="button" onClick={() => nudgeBank(BANK_STEP)}
-            className="btn px-2 py-0.5 text-xs"
-            title={`bank +${BANK_STEP}°`} aria-label="bank right">▶</button>
-          <span />
-          <button type="button" onClick={() => nudgePitch(PITCH_STEP)}
-            className="btn px-2 py-0.5 text-xs"
-            title={`pitch +${PITCH_STEP}°`} aria-label="pitch up">▼</button>
-          <span />
+
+        {/* Cross — each button has a larger arrow + accent-bordered keycap
+            badge below it. Badge opacity transitions so layout never shifts. */}
+        <div className="flex flex-col items-center gap-1.5">
+          {/* Up — pitch down (yoke push, nose down) */}
+          <button
+            type="button"
+            onClick={() => nudgePitch(-PITCH_STEP)}
+            className="btn px-3 py-1.5 flex flex-col items-center gap-1.5 min-w-[58px]"
+            title={`pitch −${PITCH_STEP}° · ↑ / W`}
+            aria-label="pitch down"
+          >
+            <span className="text-base leading-none">▲</span>
+            <NudgeKeyBadge text="↑ W" active={keyboardMode} />
+          </button>
+
+          {/* Middle row: bank-left | centre | bank-right */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => nudgeBank(-BANK_STEP)}
+              className="btn px-3 py-1.5 flex flex-col items-center gap-1.5 min-w-[58px]"
+              title={`bank −${BANK_STEP}° · ← / A`}
+              aria-label="bank left"
+            >
+              <span className="text-base leading-none">◀</span>
+              <NudgeKeyBadge text="← A" active={keyboardMode} />
+            </button>
+            <button
+              type="button"
+              onClick={() => { setTheta(0); setBank(0); }}
+              className="btn-ghost btn px-3 py-1.5 flex flex-col items-center gap-1.5 min-w-[58px]"
+              title="centre — reset pitch & bank · X"
+              aria-label="centre"
+            >
+              <span className="text-sm leading-none">●</span>
+              <NudgeKeyBadge text="X" active={keyboardMode} />
+            </button>
+            <button
+              type="button"
+              onClick={() => nudgeBank(BANK_STEP)}
+              className="btn px-3 py-1.5 flex flex-col items-center gap-1.5 min-w-[58px]"
+              title={`bank +${BANK_STEP}° · → / D`}
+              aria-label="bank right"
+            >
+              <span className="text-base leading-none">▶</span>
+              <NudgeKeyBadge text="→ D" active={keyboardMode} />
+            </button>
+          </div>
+
+          {/* Down — pitch up (yoke pull, nose up) */}
+          <button
+            type="button"
+            onClick={() => nudgePitch(PITCH_STEP)}
+            className="btn px-3 py-1.5 flex flex-col items-center gap-1.5 min-w-[58px]"
+            title={`pitch +${PITCH_STEP}° · ↓ / S`}
+            aria-label="pitch up"
+          >
+            <span className="text-base leading-none">▼</span>
+            <NudgeKeyBadge text="↓ S" active={keyboardMode} />
+          </button>
         </div>
+
         <div className="border border-app px-2 py-1 bg-app w-full">
           <div className="flex items-center justify-between text-[10px] num text-fg-soft">
             <span>θ</span>

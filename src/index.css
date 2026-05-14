@@ -375,6 +375,11 @@
   }
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
 @layer utilities {
   .text-c-lift     { color: var(--c-lift); }
   .text-c-weight   { color: var(--c-weight); }

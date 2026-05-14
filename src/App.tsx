@@ -64,6 +64,61 @@ export default function App() {
   const [theme, setTheme] = useState<Theme>('auto');
   const [showAssumptions, setShowAssumptions] = useState(false);
   const [consoleCollapsed, setConsoleCollapsed] = useState(false);
+  const [keyboardMode, setKeyboardMode] = useState(false);
+
+  // ─── Global toggle: K turns keyboard piloting on/off (always listening). ──
+  useEffect(() => {
+    function handleToggle(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key === 'k' || e.key === 'K') {
+        e.preventDefault();
+        setKeyboardMode((v) => !v);
+      }
+    }
+    window.addEventListener('keydown', handleToggle);
+    return () => window.removeEventListener('keydown', handleToggle);
+  }, []);
+
+  // ─── Keyboard piloting (only active when toggled on) ─────────────────────
+  // ↑/W: pitch −2.5° (nose down)     ↓/S: pitch +2.5° (yoke-pull, nose up)
+  // ←/A: bank −5°    →/D: bank +5°
+  // R:   throttle +50 N              F:   throttle −50 N
+  useEffect(() => {
+    if (!keyboardMode) return;
+
+    function roundTo(v: number, step: number) { return Math.round(v / step) * step; }
+    function clamp(v: number, lo: number, hi: number) { return Math.min(hi, Math.max(lo, v)); }
+
+    function handleKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      let handled = true;
+      const k = e.key;
+      if (k === 'ArrowUp' || k === 'w' || k === 'W') {
+        setTheta((t) => clamp(roundTo(t - 2.5, 2.5), -15, 30));
+      } else if (k === 'ArrowDown' || k === 's' || k === 'S') {
+        setTheta((t) => clamp(roundTo(t + 2.5, 2.5), -15, 30));
+      } else if (k === 'ArrowLeft' || k === 'a' || k === 'A') {
+        setBank((b) => clamp(roundTo(b - 5, 5), -75, 75));
+      } else if (k === 'ArrowRight' || k === 'd' || k === 'D') {
+        setBank((b) => clamp(roundTo(b + 5, 5), -75, 75));
+      } else if (k === 'r' || k === 'R') {
+        setThrust((t) => clamp(t + 50, 0, 1100));
+      } else if (k === 'f' || k === 'F') {
+        setThrust((t) => clamp(t - 50, 0, 1100));
+      } else if (k === 'x' || k === 'X') {
+        setTheta(0);
+        setBank(0);
+      } else {
+        handled = false;
+      }
+      if (handled) e.preventDefault();
+    }
+
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [keyboardMode]);
 
   function resetToDefaults() {
     setFlaps(DEFAULTS.flaps);
@@ -108,15 +163,14 @@ export default function App() {
         {/* ─── Header — drafting frontispiece ─── */}
         <header className="mb-4 pb-3 border-b border-app">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <div className="flex items-baseline gap-4">
+            <div className="flex items-baseline gap-4 flex-wrap">
               <div>
                 <div className="meta" style={{ fontSize: 9, letterSpacing: '0.28em' }}>
-                  PRINCIPLES OF FLIGHT · STUDY SUPPLEMENT
+                  AERODYNAMIC STUDY SUPPLEMENT · CESSNA 152
                 </div>
-                <h1 className="font-display italic text-2xl sm:text-3xl mt-0.5 leading-none" style={{ fontVariationSettings: "'SOFT' 30, 'WONK' 1, 'opsz' 144" }}>
-                  Cessna <span className="text-accent">152</span>
-                  <span className="text-fg-mute font-normal not-italic mx-2">·</span>
-                  <span className="font-normal not-italic text-fg-soft text-xl">Aerodynamics</span>
+                <h1 className="font-display italic text-2xl sm:text-3xl mt-0.5 leading-none" style={{ fontVariationSettings: "'SOFT' 30, 'opsz' 144" }}>
+                  Principles <span className="text-fg-soft font-normal not-italic mx-1">of</span>
+                  <span className="text-accent">Flight</span>
                 </h1>
               </div>
               <span className="stamp hidden sm:inline-flex">
@@ -146,14 +200,24 @@ export default function App() {
             title="Fig 2 — Lift coefficient Cₗ vs α"
             aside={`α ${state.alpha.toFixed(1)}° · Cₗ ${state.CL.toFixed(2)}`}
           >
-            <CLChart activeFlaps={flaps} alpha={state.alpha} CL={state.CL} showAllFlapCurves />
+            <CLChart
+              activeFlaps={flaps}
+              alpha={state.alpha}
+              CL={state.CL}
+              showAllFlapCurves
+              stalled={state.status === 'stalled'}
+            />
           </Card>
 
           <Card
             title="Fig 3 — Drag curves D vs V"
             aside={`D ${Math.round(state.D)} N at ${state.V_kts.toFixed(0)} kt`}
           >
-            <DragChart flaps={flaps} V_kts={state.V_kts} />
+            <DragChart
+              flaps={flaps}
+              V_kts={state.V_kts}
+              stalled={state.status === 'stalled'}
+            />
           </Card>
         </div>
 
@@ -236,6 +300,8 @@ export default function App() {
       <ControlConsole
         collapsed={consoleCollapsed}
         onToggle={() => setConsoleCollapsed((v) => !v)}
+        keyboardMode={keyboardMode}
+        setKeyboardMode={setKeyboardMode}
         theta={theta}
         bank={bank}
         thrust={thrust}
@@ -250,8 +316,17 @@ export default function App() {
         resetToDefaults={resetToDefaults}
       />
 
-      <footer className="hidden">
-        <span>Educational tool — not for flight planning.</span>
+      {/* Visible copyright footer — sits above the sticky console via padding */}
+      <footer
+        className="fixed inset-x-0 z-30 pointer-events-none flex justify-center"
+        style={{ bottom: (consoleCollapsed ? 96 : 268) + 4 }}
+      >
+        <div
+          className="pointer-events-auto px-3 py-0.5 num text-fg-mute"
+          style={{ fontSize: 9, letterSpacing: '0.08em' }}
+        >
+          © {new Date().getFullYear()} Fábio Duque · Educational tool — not for flight planning.
+        </div>
       </footer>
     </div>
   );
