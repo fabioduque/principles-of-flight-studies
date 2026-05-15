@@ -437,6 +437,19 @@ export function ControlConsole(props: Props) {
                 </div>
               </div>
             </div>
+
+            {/* Reset — visible in collapsed view so mobile users (forced
+                collapsed) still have a way to recover pitch/bank/throttle/
+                flaps to cruise defaults. */}
+            <button
+              type="button"
+              onClick={resetToDefaults}
+              className="btn-ghost btn text-[10px] px-2.5 py-1"
+              title="Reset pitch, bank, throttle, and flaps to cruise defaults"
+              aria-label={t.reset}
+            >
+              ↺ {t.reset}
+            </button>
           </div>
         </div>
       )}
