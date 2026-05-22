@@ -36,14 +36,20 @@ describe('lift coefficient', () => {
   it('linear slope of 0.10/° pre-stall (clean wing)', () => {
     expect(computeCL(8, 0)).toBeCloseTo(1.0, 6);
   });
-  it('caps at CL_max before stall AoA', () => {
+  it('peaks at CL_max exactly at the critical AoA', () => {
     const c = FLAP_CONFIGS[0];
-    expect(computeCL(c.alphaStall - 0.001, 0)).toBeCloseTo(c.CLmax, 4);
+    expect(computeCL(c.alphaStall, 0)).toBeCloseTo(c.CLmax, 6);
   });
-  it('drops post-stall by 0.09 per degree', () => {
+  it('peak is rounded (no plateau) — CL strictly below CL_max just before stall', () => {
     const c = FLAP_CONFIGS[0];
-    const CL = computeCL(c.alphaStall + 3, 0);
-    expect(CL).toBeCloseTo(c.CLmax - 0.09 * 3, 4);
+    // 2° below the peak the rounded curve should still be measurably below CLmax
+    expect(computeCL(c.alphaStall - 2, 0)).toBeLessThan(c.CLmax - 0.01);
+  });
+  it('drops post-stall by 0.09 per degree well past stall', () => {
+    const c = FLAP_CONFIGS[0];
+    // Past the post-stall rounding zone (4°) the drop is linear at -0.09/°
+    const CL = computeCL(c.alphaStall + 6, 0);
+    expect(CL).toBeCloseTo(c.CLmax - 0.09 * 6, 4);
   });
   it('post-stall has a floor of 0.4', () => {
     expect(computeCL(40, 0)).toBeCloseTo(0.4, 6);

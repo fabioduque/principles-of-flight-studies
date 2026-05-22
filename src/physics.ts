@@ -40,6 +40,14 @@ export const K_INDUCED = 1 / (Math.PI * ASPECT_RATIO * OSWALD_E);
 export const POST_STALL_DROP_PER_DEG = 0.09;
 export const CL_FLOOR = 0.4;
 
+// Width of the rounded peak around α_stall (degrees). The lift curve bends
+// from its linear rise into a smooth maximum over STALL_PEAK_WIDTH_PRE before
+// α_stall, and from the peak into the linear post-stall drop over
+// STALL_PEAK_WIDTH_POST after. Tuned so the peak occurs exactly at α_stall
+// with value exactly CLmax — preserving the visible Vs marker and labels.
+const STALL_PEAK_WIDTH_PRE = 6;
+const STALL_PEAK_WIDTH_POST = 4;
+
 export const N_LIMIT_POS = 4.4;
 export const N_LIMIT_NEG = -1.76;
 
@@ -53,11 +61,40 @@ export function dynamicPressure(V_ms: number, rho = RHO_SL): number {
   return 0.5 * rho * V_ms * V_ms;
 }
 
+// Cubic Hermite interpolant on the unit interval t ∈ [0, 1].
+// p0, p1 are endpoint values; m0, m1 are endpoint slopes already scaled to t.
+function hermite01(t: number, p0: number, m0: number, p1: number, m1: number): number {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const h00 = 2 * t3 - 3 * t2 + 1;
+  const h10 = t3 - 2 * t2 + t;
+  const h01 = -2 * t3 + 3 * t2;
+  const h11 = t3 - t2;
+  return h00 * p0 + h10 * m0 + h01 * p1 + h11 * m1;
+}
+
 export function computeCL(alphaDeg: number, flaps: Flaps): number {
   const c = FLAP_CONFIGS[flaps];
+  const wPre = STALL_PEAK_WIDTH_PRE;
+  const wPost = STALL_PEAK_WIDTH_POST;
+
+  if (alphaDeg < c.alphaStall - wPre) {
+    return c.liftSlope * (alphaDeg - c.alphaZeroLift);
+  }
   if (alphaDeg < c.alphaStall) {
-    const linear = c.liftSlope * (alphaDeg - c.alphaZeroLift);
-    return Math.min(linear, c.CLmax);
+    // Linear-to-peak Hermite blend. Slope 0 at α_stall pins the maximum.
+    const t = (alphaDeg - (c.alphaStall - wPre)) / wPre;
+    const CL_left = c.liftSlope * (c.alphaStall - wPre - c.alphaZeroLift);
+    const m_left = c.liftSlope * wPre;
+    return hermite01(t, CL_left, m_left, c.CLmax, 0);
+  }
+  if (alphaDeg < c.alphaStall + wPost) {
+    // Peak-to-linear-drop Hermite blend. Slope 0 at α_stall makes the
+    // maximum smooth from both sides.
+    const t = (alphaDeg - c.alphaStall) / wPost;
+    const CL_right = c.CLmax - POST_STALL_DROP_PER_DEG * wPost;
+    const m_right = -POST_STALL_DROP_PER_DEG * wPost;
+    return hermite01(t, c.CLmax, 0, CL_right, m_right);
   }
   const postStall = c.CLmax - POST_STALL_DROP_PER_DEG * (alphaDeg - c.alphaStall);
   return Math.max(postStall, CL_FLOOR);
