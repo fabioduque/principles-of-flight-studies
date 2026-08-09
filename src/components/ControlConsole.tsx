@@ -21,7 +21,7 @@ import { translatePresetName, translateStatus, useI18n } from '../i18n';
 
 const MAX_THRUST = 1100;
 const BANK_STEP = 5;
-const PITCH_STEP_OPTIONS = [2.5, 1] as const;
+const PITCH_STEP_OPTIONS = [2.5, 1, 0.5] as const;
 
 interface Props {
   collapsed: boolean;
