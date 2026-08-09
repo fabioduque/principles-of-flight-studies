@@ -20,8 +20,8 @@ import {
 import { translatePresetName, translateStatus, useI18n } from '../i18n';
 
 const MAX_THRUST = 1100;
-const PITCH_STEP = 2.5;
 const BANK_STEP = 5;
+const PITCH_STEP_OPTIONS = [2.5, 1] as const;
 
 interface Props {
   collapsed: boolean;
@@ -41,6 +41,8 @@ interface Props {
   flaps: Flaps;
   throttlePct: number;
   state: FlightState;
+  pitchStep: number;
+  setPitchStep: (v: number) => void;
   setTheta: (v: number) => void;
   setBank: (v: number) => void;
   setThrust: (v: number) => void;
@@ -226,6 +228,7 @@ export function ControlConsole(props: Props) {
     collapsed, onToggle, canToggle, isMobile,
     keyboardMode, setKeyboardMode,
     theta, bank, thrust, flaps, throttlePct, state,
+    pitchStep, setPitchStep,
     setTheta, setBank, setThrust, setFlaps,
     applyPreset, resetToDefaults,
   } = props;
@@ -263,8 +266,23 @@ export function ControlConsole(props: Props) {
             {t.consoleTitle}
           </span>
           <span className="hidden sm:inline meta text-fg-mute" style={{ fontSize: 8.5, letterSpacing: '0.18em' }}>
-            {t.step} θ {PITCH_STEP}° · φ {BANK_STEP}° · T 10 N
+            {t.step} φ {BANK_STEP}° · T 10 N
           </span>
+          <div className="hidden sm:flex border border-app" role="group" aria-label="Pitch step">
+            {PITCH_STEP_OPTIONS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setPitchStep(s)}
+                className={`pill !border-0 ${pitchStep === s ? 'is-active' : ''}`}
+                aria-pressed={pitchStep === s}
+                title={`Pitch step ${s}°`}
+                style={{ fontSize: 8.5 }}
+              >
+                θ {s}°
+              </button>
+            ))}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <span
@@ -354,7 +372,7 @@ export function ControlConsole(props: Props) {
               symbol="θ"
               value={theta}
               unit="°"
-              step={PITCH_STEP}
+              step={pitchStep}
               min={-15}
               max={30}
               onChange={setTheta}
@@ -496,6 +514,7 @@ export function ControlConsole(props: Props) {
                 setTheta={setTheta}
                 setBank={setBank}
                 keyboardMode={keyboardMode}
+                pitchStep={pitchStep}
               />
             </div>
 

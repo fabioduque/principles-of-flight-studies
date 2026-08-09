@@ -3,7 +3,7 @@
 //   • Pitch presets stack as a vertical "tape" to the right of the AI.
 //   • A compact 4-way nudge cross provides fine adjustment.
 //
-// Increments: pitch step = 2.5° · bank step = 5°.
+// Increments: pitch step = 2.5° or 1° (toggle) · bank step = 5°.
 
 import { useCallback, useRef } from 'react';
 import { useI18n } from '../i18n';
@@ -16,6 +16,7 @@ interface Props {
   pitchMin?: number;
   pitchMax?: number;
   bankMax?: number;
+  pitchStep?: number;
   size?: number;
   /** When true, render key-cap hints next to each nudge direction. */
   keyboardMode?: boolean;
@@ -54,7 +55,6 @@ function clamp(v: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, v));
 }
 
-const PITCH_STEP = 2.5;
 const BANK_STEP = 5;
 
 const PITCH_PRESETS = [20, 15, 10, 5, 0, -5, -10];
@@ -86,6 +86,7 @@ export function AttitudeControl({
   pitchMin = -15,
   pitchMax = 30,
   bankMax = 75,
+  pitchStep = 2.5,
   size = 168,
   keyboardMode = false,
 }: Props) {
@@ -111,9 +112,9 @@ export function AttitudeControl({
       const newPitch = clamp(pitchMid + dy * halfPitchRange, pitchMin, pitchMax);
 
       setBank(roundTo(newBank, BANK_STEP));
-      setTheta(roundTo(newPitch, PITCH_STEP));
+      setTheta(roundTo(newPitch, pitchStep));
     },
-    [bankMax, pitchMin, pitchMax, pitchMid, halfPitchRange, setBank, setTheta],
+    [bankMax, pitchMin, pitchMax, pitchMid, halfPitchRange, pitchStep, setBank, setTheta],
   );
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -132,7 +133,7 @@ export function AttitudeControl({
   };
 
   const nudgePitch = (d: number) =>
-    setTheta(clamp(roundTo(theta + d, PITCH_STEP), pitchMin, pitchMax));
+    setTheta(clamp(roundTo(theta + d, pitchStep), pitchMin, pitchMax));
   const nudgeBank = (d: number) =>
     setBank(clamp(roundTo(bank + d, BANK_STEP), -bankMax, bankMax));
 
@@ -159,9 +160,9 @@ export function AttitudeControl({
           {/* Up — pitch down (yoke push, nose down) */}
           <button
             type="button"
-            onClick={() => nudgePitch(-PITCH_STEP)}
+            onClick={() => nudgePitch(-pitchStep)}
             className="btn px-3 py-1.5 flex flex-col items-center gap-1.5 min-w-[58px]"
-            title={`pitch −${PITCH_STEP}° · ↑ / W`}
+            title={`pitch −${pitchStep}° · ↑ / W`}
             aria-label="pitch down"
           >
             <span className="text-base leading-none">▲</span>
@@ -205,9 +206,9 @@ export function AttitudeControl({
           {/* Down — pitch up (yoke pull, nose up) */}
           <button
             type="button"
-            onClick={() => nudgePitch(PITCH_STEP)}
+            onClick={() => nudgePitch(pitchStep)}
             className="btn px-3 py-1.5 flex flex-col items-center gap-1.5 min-w-[58px]"
-            title={`pitch +${PITCH_STEP}° · ↓ / S`}
+            title={`pitch +${pitchStep}° · ↓ / S`}
             aria-label="pitch up"
           >
             <span className="text-base leading-none">▼</span>
@@ -442,7 +443,7 @@ export function AttitudeControl({
           })}
         </div>
         <div className="text-[9px] text-fg-mute mt-1 text-center" style={{ letterSpacing: '0.1em' }}>
-          {t.step} {PITCH_STEP}°
+          {t.step} {pitchStep}°
         </div>
       </div>
     </div>

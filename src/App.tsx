@@ -64,6 +64,8 @@ export default function App() {
   const [theta, setTheta] = useState(DEFAULTS.theta);
   const [thrust, setThrust] = useState(DEFAULTS.thrust);
   const [bank, setBank] = useState(DEFAULTS.bank);
+  // Nudge/keyboard pitch increment — 2.5° by default, 1° for finer control.
+  const [pitchStep, setPitchStep] = useState(2.5);
   // Dark by default — the blueprint look is the project's signature.
   const [theme, setTheme] = useState<Theme>('dark');
   // Default to English; user picks PT manually from the header toggle.
@@ -202,9 +204,9 @@ export default function App() {
 
       let handled = true;
       if (k === 'ArrowUp' || k === 'w' || k === 'W') {
-        setTheta((t) => clamp(roundTo(t - 2.5, 2.5), -15, 30));
+        setTheta((t) => clamp(roundTo(t - pitchStep, pitchStep), -15, 30));
       } else if (k === 'ArrowDown' || k === 's' || k === 'S') {
-        setTheta((t) => clamp(roundTo(t + 2.5, 2.5), -15, 30));
+        setTheta((t) => clamp(roundTo(t + pitchStep, pitchStep), -15, 30));
       } else if (k === 'ArrowLeft' || k === 'a' || k === 'A') {
         setBank((b) => clamp(roundTo(b - 5, 5), -75, 75));
       } else if (k === 'ArrowRight' || k === 'd' || k === 'D') {
@@ -235,7 +237,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [keyboardMode, showKeyboardEscapeHint]);
+  }, [keyboardMode, showKeyboardEscapeHint, pitchStep]);
 
   function resetToDefaults() {
     setFlaps(DEFAULTS.flaps);
@@ -478,6 +480,8 @@ export default function App() {
         flaps={flaps}
         throttlePct={throttlePct}
         state={state}
+        pitchStep={pitchStep}
+        setPitchStep={setPitchStep}
         setTheta={setTheta}
         setBank={setBank}
         setThrust={setThrust}
