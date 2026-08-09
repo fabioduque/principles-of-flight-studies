@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import type { Flaps } from '../physics';
-import { sampleDragCurve, dragAtTrim } from '../physics';
+import { sampleDragCurve, dragAtTrim, minDragSpeed, bestEnduranceSpeed } from '../physics';
 import { StallStamp } from './StallStamp';
 import { useI18n } from '../i18n';
 
@@ -27,6 +27,18 @@ export function DragChart({ flaps, V_kts, stalled }: Props) {
   const vMaxSample = Math.max(130, Math.ceil(V_kts) + 10);
   const data = sampleDragCurve(flaps, 35, vMaxSample, 1);
   const here = dragAtTrim(V_kts, flaps);
+
+  // VMD — speed for minimum total drag, i.e. the trough of the curve and
+  // the point of maximum L/D.
+  const vmd = minDragSpeed(flaps);
+  const atVmd = dragAtTrim(vmd, flaps);
+  const vmdOnCurve = vmd >= 35 && vmd <= vMaxSample;
+
+  // VE — best-endurance speed (minimum power, not minimum drag), sits on
+  // the curve above and to the left of the VMD trough.
+  const ve = bestEnduranceSpeed(flaps);
+  const atVe = dragAtTrim(ve, flaps);
+  const veOnCurve = ve >= 35 && ve <= vMaxSample;
 
   // X-axis ticks: choose dynamically so they remain evenly spaced even when
   // the chart stretches to accommodate a high-speed sample.
@@ -80,6 +92,46 @@ export function DragChart({ flaps, V_kts, stalled }: Props) {
             <Line type="monotone" dataKey="parasite" name="Parasite" stroke="var(--c-drag)" strokeWidth={2} dot={false} isAnimationActive={false} />
             <Line type="monotone" dataKey="induced" name="Induced" stroke="var(--c-magenta)" strokeWidth={2} dot={false} isAnimationActive={false} />
             <Line type="monotone" dataKey="total" name="Total" stroke="var(--c-lift)" strokeWidth={2.5} dot={false} isAnimationActive={false} />
+            {/* VMD marker — the answer to "which point is min drag / best L/D?" */}
+            {vmdOnCurve && (
+              <ReferenceDot
+                x={atVmd.V_kts}
+                y={atVmd.total}
+                r={5.5}
+                fill="var(--accent)"
+                stroke="var(--bg-elev)"
+                strokeWidth={2}
+                ifOverflow="extendDomain"
+                label={{
+                  value: `${t.vmdLabel} ${vmd.toFixed(0)} kt · ${t.vmdHint}`,
+                  position: 'top',
+                  fill: 'var(--accent)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  offset: 8,
+                }}
+              />
+            )}
+            {/* VE marker — best endurance (min power, not min drag). */}
+            {veOnCurve && (
+              <ReferenceDot
+                x={atVe.V_kts}
+                y={atVe.total}
+                r={5.5}
+                fill="var(--c-thrust)"
+                stroke="var(--bg-elev)"
+                strokeWidth={2}
+                ifOverflow="extendDomain"
+                label={{
+                  value: `${t.enduranceLabel} ${ve.toFixed(0)} kt · ${t.enduranceHint}`,
+                  position: 'top',
+                  fill: 'var(--c-thrust)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  offset: 8,
+                }}
+              />
+            )}
             {onCurve && (
               <ReferenceDot
                 x={here.V_kts}
@@ -94,6 +146,62 @@ export function DragChart({ flaps, V_kts, stalled }: Props) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      {/* ── Pedagogical explanation panel ──
+          Explicit answer to: "which point on the drag curve is the
+          minimum-drag speed?" — links the curve's trough to VMD / L-D max. */}
+      <div
+        className="mt-4 px-3 py-2.5 border-l-[3px]"
+        style={{ borderColor: 'var(--accent)', background: 'var(--bg)' }}
+      >
+        <div
+          className="meta mb-1.5"
+          style={{ fontSize: 9, letterSpacing: '0.15em', color: 'var(--accent)' }}
+        >
+          {t.pedagogyVmdTitle}
+        </div>
+        <p className="text-[11.5px] text-fg-soft leading-relaxed">
+          {t.pedagogyVmdL1}{' '}
+          {t.pedagogyVmdL2}{' '}
+          <span
+            className="inline-block num"
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              padding: '1px 6px',
+              background: 'var(--bg-elev)',
+              border: '1px solid var(--rule)',
+              color: 'var(--text)',
+              margin: '0 2px',
+              fontSize: 11,
+            }}
+          >
+            {t.pedagogyVmdFormula}
+          </span>
+          <strong className="text-fg"> {t.pedagogyVmdL3}</strong>{' '}
+          {t.pedagogyVmdL4}
+        </p>
+
+        <p className="text-[11.5px] text-fg-soft leading-relaxed mt-2 pt-2 border-t" style={{ borderColor: 'var(--rule)' }}>
+          {t.pedagogyEnduranceL1}{' '}
+          <span
+            className="inline-block num"
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              padding: '1px 6px',
+              background: 'var(--bg-elev)',
+              border: '1px solid var(--rule)',
+              color: 'var(--text)',
+              margin: '0 2px',
+              fontSize: 11,
+            }}
+          >
+            {t.pedagogyEnduranceFormula}
+          </span>
+          <strong className="text-fg"> {t.pedagogyEnduranceL2}</strong>{' '}
+          {t.pedagogyEnduranceL3}
+        </p>
+      </div>
+
       <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs num">
         <li className="inline-flex items-center gap-1.5"><span className="inline-block w-3 h-0.5" style={{ background: 'var(--c-drag)' }} />{t.parasiteLegend}</li>
         <li className="inline-flex items-center gap-1.5"><span className="inline-block w-3 h-0.5" style={{ background: 'var(--c-magenta)' }} />{t.inducedLegend}</li>

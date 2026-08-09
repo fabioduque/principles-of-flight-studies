@@ -466,6 +466,23 @@ export function minLevelThrust(flaps: Flaps): number {
   return 2 * WEIGHT_N * Math.sqrt(K_INDUCED * c.CD0);
 }
 
+// Speed for minimum total drag (VMD) — the trough of the drag-vs-V curve,
+// where parasite drag equals induced drag: CL = √(CD0/k).
+export function minDragSpeed(flaps: Flaps): number {
+  const c = FLAP_CONFIGS[flaps];
+  const CL_md = Math.sqrt(c.CD0 / K_INDUCED);
+  const V_ms = Math.sqrt((2 * WEIGHT_N) / (RHO_SL * WING_AREA * CL_md));
+  return V_ms / KT_TO_MS;
+}
+
+// Speed for best endurance — for a propeller aircraft, fuel flow tracks
+// power (P = D·V), not drag, so minimum power (not minimum drag) is what
+// maximizes time aloft. Minimizing D·V gives CL_E = √3 · CL_md, which
+// works out to V_E = V_md / ⁴√3 ≈ 0.76·V_md — slower than best glide.
+export function bestEnduranceSpeed(flaps: Flaps): number {
+  return minDragSpeed(flaps) / Math.pow(3, 0.25);
+}
+
 export function sampleCLCurve(
   flaps: Flaps,
   step = 0.5,

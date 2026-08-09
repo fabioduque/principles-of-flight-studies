@@ -70,6 +70,23 @@ const en = {
   pedagogyL3: 'Higher CL → lower minimum speed.',
   pedagogyL4: 'The peak of the curve (CL max) is therefore the slowest level flight — Vs. Past the peak the wing stalls.',
 
+  // Pedagogical annotations on the Drag chart
+  vmdLabel: 'VMD',
+  vmdHint: 'min drag / best L/D',
+  pedagogyVmdTitle: 'How this chart answers "what is the minimum-drag speed?"',
+  pedagogyVmdL1: 'Total drag is parasite drag (∝V²) plus induced drag (∝1/V²).',
+  pedagogyVmdL2: 'The total is lowest where the two are equal, at CL = √(CD0/k) — k is the induced-drag factor, 1/(π·e·AR):',
+  pedagogyVmdFormula: 'V_MD = √(2W / (ρ·S·√(CD0/k)))',
+  pedagogyVmdL3: 'This is also the point of maximum L/D.',
+  pedagogyVmdL4: 'The trough of the curve is therefore the most efficient airspeed to fly — best glide (and best range) if the engine quits.',
+
+  enduranceLabel: 'VE',
+  enduranceHint: 'best endurance',
+  pedagogyEnduranceL1: 'For a propeller aircraft, fuel flow tracks power (P = D·V), not drag — minimizing that gives a slower CL:',
+  pedagogyEnduranceFormula: 'V_E = V_MD / ⁴√3 ≈ 0.76·V_MD',
+  pedagogyEnduranceL2: 'Best endurance is therefore flown slower than best glide.',
+  pedagogyEnduranceL3: 'It trades distance for time aloft — useful for holding, not for covering ground.',
+
   // Console cartouche
   consoleTitle: 'CONSOLE · PILOT INPUTS',
   step: 'STEP',
@@ -191,6 +208,22 @@ const pt: typeof en = {
   pedagogyFormula: 'V = √(2W / (ρ·S·CL))',
   pedagogyL3: 'Maior CL → menor velocidade mínima.',
   pedagogyL4: 'O pico da curva (CL max) é portanto a velocidade mais baixa em voo nivelado — Vs. Passar o pico = perda.',
+
+  vmdLabel: 'VMD',
+  vmdHint: 'resist. mínima / L/D máximo',
+  pedagogyVmdTitle: 'Como este gráfico responde a "qual é a velocidade de resistência mínima?"',
+  pedagogyVmdL1: 'A resistência total é a resistência parasita (∝V²) mais a induzida (∝1/V²).',
+  pedagogyVmdL2: 'O total é mínimo quando as duas são iguais, em CL = √(CD0/k) — k é o fator de resistência induzida, 1/(π·e·AR):',
+  pedagogyVmdFormula: 'V_MD = √(2W / (ρ·S·√(CD0/k)))',
+  pedagogyVmdL3: 'Este é também o ponto de L/D máximo.',
+  pedagogyVmdL4: 'O fundo da curva é, portanto, a velocidade mais eficiente a voar — planeio ótimo (e alcance máximo) se o motor falhar.',
+
+  enduranceLabel: 'VE',
+  enduranceHint: 'máxima autonomia',
+  pedagogyEnduranceL1: 'Numa aeronave a hélice, o consumo de combustível acompanha a potência (P = D·V), não a resistência — minimizar isso dá um CL mais alto:',
+  pedagogyEnduranceFormula: 'V_E = V_MD / ⁴√3 ≈ 0,76·V_MD',
+  pedagogyEnduranceL2: 'A máxima autonomia é, portanto, voada mais devagar que o planeio ótimo.',
+  pedagogyEnduranceL3: 'Troca distância por tempo no ar — útil para espera, não para percorrer distância.',
 
   consoleTitle: 'CONSOLE · COMANDOS DO PILOTO',
   step: 'PASSO',
